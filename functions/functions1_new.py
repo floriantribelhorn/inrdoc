@@ -168,7 +168,7 @@ def quick_eintrag(quick,date):
     cursor.execute(f"""
         INSERT INTO `freedb_inrdoc`.`{tablename}` (quick, datum, user)
         VALUES (%s,%s,%s)
-        """, (quick,date,st.session_state['loggedinuser']))
+        """, (quick,date,st.session_state['loggedinuserid']))
 
     conn.commit()
     conn.close()
