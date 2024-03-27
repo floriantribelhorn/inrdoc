@@ -14,4 +14,4 @@ with st.container(border=True):
 
 if zeigen:
     dauer = zeitraum(zeit)
-    quick_data_check(st.session_state['loggedinuser'],dauer)
+    quick_data_check(st.session_state['loggedinuserid'],dauer)
