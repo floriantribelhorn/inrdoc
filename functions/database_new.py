@@ -29,8 +29,8 @@ def setup_quickdatabase(someoneloggedin):
     
     if someoneloggedin != False:
         cur = conn.cursor()
-        currentuser = st.session_state['loggedinuserid']
-        tablename = f'quick_data_from_{currentuser}'
+        currentuserid = st.session_state['loggedinuserid']
+        tablename = f'quick_data_from_{currentuserid}'
         cur.execute(f"""CREATE TABLE IF NOT EXISTS `freedb_inrdoc`.`{tablename}` (`id` INT NOT NULL AUTO_INCREMENT, 
                     `quick` TEXT NOT NULL,
                     `datum` TEXT NOT NULL,
