@@ -4,5 +4,4 @@ streamlit
 datetime
 pandas
 mysql.connector
-mysql
 mysql.connector.python
