@@ -87,15 +87,16 @@ def user_einloggen(username, password):
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
 
-    cursor.execute('SELECT `username`, `password`,`vorname` FROM `freedb_inrdoc`.`user_data` WHERE username = %s', (username,))
+    cursor.execute('SELECT `id`,`username`, `password`,`vorname` FROM `freedb_inrdoc`.`user_data` WHERE username = %s', (username,))
     rows = cursor.fetchall()
 
     if len(rows) == 1:
-        uname, pw1, vname = rows[0]
+        userid, uname, pw1, vname = rows[0]
         if uname == username and pw1 == pw:
             st.session_state['loginstatus'] = True
             st.write('logged in')
             st.session_state['loggedinuser'] = vname
+            st.session_state['loggedinuserid'] = userid
             st.switch_page('main.py')
     else:
         st.write('keine Treffer')
