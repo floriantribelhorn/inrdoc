@@ -21,4 +21,4 @@ if __name__ == '__main__':
     jahre.reverse()
     with st.container(border=True):
         bereich = st.selectbox('Wählen Sie das gewünschte Jahr aus',(jahre))
-    editoranzeige(st.session_state['loggedinuser'],bereich)
+    editoranzeige(st.session_state['loggedinuserid'],bereich)
