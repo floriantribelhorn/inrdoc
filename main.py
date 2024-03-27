@@ -15,4 +15,4 @@ if 'loggedinuserid' not in st.session_state:
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
     user_database()
-    setup_quickdatabase(st.session_state['loggedinuser'])
+    setup_quickdatabase(st.session_state['loggedinuserid'])
