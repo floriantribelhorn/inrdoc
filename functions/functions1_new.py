@@ -162,8 +162,8 @@ def quick_eintrag(quick,date):
     
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
-    currentuser = st.session_state['loggedinuser']
-    tablename = f'quick_data_from_{currentuser}'
+    currentuserid = st.session_state['loggedinuserid']
+    tablename = f'quick_data_from_{currentuserid}'
 
     cursor.execute(f"""
         INSERT INTO `freedb_inrdoc`.`{tablename}` (quick, datum, user)
