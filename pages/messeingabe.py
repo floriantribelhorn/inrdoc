@@ -14,7 +14,7 @@ with st.container(border=True):
     datum = st.date_input('Zeitpunkt der Messung')
     abspeichern = st.button('Quick jetzt abspeichern')
     if abspeichern:
-        if not quick_empty(st.session_state['loggedinuser'],datum):
+        if not quick_empty(st.session_state['loggedinuserid'],datum):
             quick_eintrag(heutigerquick,datum)
         else:
             st.write('An diesem Datum existiert bereits eine eingetragene Messung')
