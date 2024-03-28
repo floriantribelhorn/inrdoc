@@ -3,5 +3,5 @@ primaryColor="#111111"
 secondaryBackgroundColor="#111111"
 
 [server]
-enableCaching = false
+enableCaching = true
 showSidebar = false
