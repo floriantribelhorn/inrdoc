@@ -49,10 +49,7 @@ def empty_check2(a,b):
         return False
         
 def clear_input():
-    st.session_state['username'] = ""
-    st.session_state['vorname'] = ""
-    st.session_state['nachname'] = ""
-    st.session_state['pword'] = ""
+    st.session_state['empty'] = ""
     
 def username_check(username):
     if 'usernameavailable' not in st.session_state:
