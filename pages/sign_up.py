@@ -19,13 +19,11 @@ if st.session_state['loginstatus'] == False:
         login_username = st.text_input(label='Username ')
         login_password = st.text_input(label='Passwort ', type='password')
         einloggen = st.button(label='Einloggen')
-
     if einloggen:
         if empty_check2(login_username,login_password):
             user_einloggen(login_username,login_password)
         else:
             st.write('Füllen Sie beide Felder aus!')
-
     with st.sidebar.container(height=530,border=True):
         st.subheader('Registrierung')
         username = st.text_input(label='Username', value=st.session_state['empty'])
@@ -45,11 +43,11 @@ if st.session_state['loginstatus'] == False:
                     st.switch_page('main.py')
             else:
                 st.write('Füllen sie alle Felder aus')
-    else:
-        with st.container(border=True):
-            st.subheader('Meine Profildaten')
-            st.text_input(label='Username')
-            st.text_input(label='Vorname')
-            st.text_input(label='Nachname')
-            st.text_input(label='Passwort',type='password')
-            st.date_input(label='Geburtsdatum')
+else:
+    with st.container(border=True):
+        st.subheader('Meine Profildaten')
+        st.text_input(label='Username')
+        st.text_input(label='Vorname')
+        st.text_input(label='Nachname')
+        st.text_input(label='Passwort',type='password')
+        st.date_input(label='Geburtsdatum')
