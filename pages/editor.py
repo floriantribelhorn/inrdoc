@@ -5,6 +5,8 @@ from functions.database_new import *
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
+st.session_state['aktuell'] = 'Dateneditor'
+
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
     if st.session_state['loginstatus'] != False:
