@@ -1,2 +1,7 @@
-[client]
-showSidebarNavigation = false
+[theme]
+primaryColor="#111111"
+secondaryBackgroundColor="#111111"
+
+[server]
+enableCaching = false
+showSidebar = false
