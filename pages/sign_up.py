@@ -25,10 +25,10 @@ if st.session_state['loginstatus'] == False:
 
     with st.sidebar.container(height=530,border=True):
         st.subheader('Registrierung')
-        username = st.text_input(label='Username')
-        vorname = st.text_input(label='Vorname')
-        nachname = st.text_input(label='Nachname')
-        password = st.text_input(label='Passwort',type='password')
+        username = st.text_input(label='Username', key='username')
+        vorname = st.text_input(label='Vorname', key='vorname')
+        nachname = st.text_input(label='Nachname',key='nachname')
+        password = st.text_input(label='Passwort',type='password',key='pword')
         geburtsdatum = st.date_input(label='Geburtsdatum')
         registerdate = datetime.today().strftime("%A, %B %d, %Y %H:%M:%S")
         abspeichern = st.button(label='Registrieren')
