@@ -6,5 +6,4 @@ pandas
 mysql.connector
 mysql.connector.python
 
-[client]
 showSidebarNavigation = false
