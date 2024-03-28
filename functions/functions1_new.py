@@ -196,7 +196,7 @@ def editoranzeige(user,bereich):
         conn = mysql.connector.connect(**cnxn_str)
         tablename = f'quick_data_from_{user}'
         sql_query = f"""
-        SELECT * FROM `{tablename}`
+        SELECT * FROM `{tablename} ORDER BY {tablename}.`datum` ASC
         """
         
         df = pd.read_sql(sql_query, conn)
