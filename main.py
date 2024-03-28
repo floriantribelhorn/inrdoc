@@ -2,8 +2,9 @@ import streamlit as st
 import numpy as np
 from functions.database_new import *
 from functions.functions1_new import *
+import pages
 
-st.pages.include("seiten")
+pages.include("seiten")
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
