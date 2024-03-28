@@ -21,7 +21,7 @@ def md5sum(t):
 def main(logstate):
     st.set_page_config(page_title='INR Dokumentation', page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
     if logstate == True:
-        st.subheader(f"Hallo {st.session_state['loggedinuser']} ! Willkommen beim Quick eintragen")
+        st.subheader(f"Hallo {st.session_state['loggedinuser']}! st.session_state['aktuell']")
     else:
         st.subheader("Zur Zeit ist niemand eingeloggt, bitte loggen Sie sich links in der Navigation ein!")
 
