@@ -126,7 +126,7 @@ def quick_data_check(user, dauer):
     conn = mysql.connector.connect(**cnxn_str)
     tablename = f'quick_data_from_{user}'
     sql_query = f"""
-    SELECT * FROM `freedb_inrdoc`.`{tablename}` ORDER BY `{tablename}`.`datum` ASC`
+    SELECT * FROM `freedb_inrdoc`.`{tablename}` ORDER BY `datum` ASC
     """
 
     df = pd.read_sql(sql_query, conn)
@@ -196,7 +196,7 @@ def editoranzeige(user,bereich):
         conn = mysql.connector.connect(**cnxn_str)
         tablename = f'quick_data_from_{user}'
         sql_query = f"""
-        SELECT * FROM `{tablename}` ORDER BY `{tablename}`.`datum` ASC
+        SELECT * FROM `{tablename}` ORDER BY `datum` ASC
         """
         
         df = pd.read_sql(sql_query, conn)
