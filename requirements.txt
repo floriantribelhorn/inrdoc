@@ -5,3 +5,4 @@ datetime
 pandas
 mysql.connector
 mysql.connector.python
+pages
