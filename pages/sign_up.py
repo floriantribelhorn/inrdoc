@@ -7,6 +7,9 @@ from datetime import datetime
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
+if 'empty' not in st.session_state:
+    st.session_state['empty'] = ""
+
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
 
