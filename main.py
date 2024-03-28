@@ -14,6 +14,8 @@ if 'loggedinuserid' not in st.session_state:
 
 if 'aktuell' not in st.session_state:
     st.session_state['aktuell'] = 'Startseite'
+else:
+    st.session_state['aktuell'] = 'Startseite'
 
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
