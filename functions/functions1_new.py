@@ -126,7 +126,7 @@ def quick_data_check(user, dauer):
     conn = mysql.connector.connect(**cnxn_str)
     tablename = f'quick_data_from_{user}'
     sql_query = f"""
-    SELECT * FROM `freedb_inrdoc`.`{tablename}`
+    SELECT * FROM `freedb_inrdoc`.`{tablename} ORDER BY {tablename}.`datum` ASC`
     """
 
     df = pd.read_sql(sql_query, conn)
