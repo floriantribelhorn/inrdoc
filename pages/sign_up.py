@@ -10,6 +10,8 @@ if 'loginstatus' not in st.session_state:
 if 'empty' not in st.session_state:
     st.session_state['empty'] = ""
 
+st.session_state['aktuell'] = 'Registrierung/Login'
+
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
 
