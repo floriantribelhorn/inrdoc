@@ -42,6 +42,6 @@ if st.session_state['loginstatus'] == False:
                 if st.session_state['usernameavailable'] == True:
                     user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate)
                     clear_input()
-                    st.switch_page('pages/main.py')
+                    st.switch_page('main.py')
             else:
                 st.write('Füllen sie alle Felder aus')
