@@ -45,3 +45,11 @@ if st.session_state['loginstatus'] == False:
                     st.switch_page('main.py')
             else:
                 st.write('Füllen sie alle Felder aus')
+    else:
+        with st.container(border=True):
+            st.subheader('Meine Profildaten')
+            st.text_input(label='Username')
+            st.text_input(label='Vorname')
+            st.text_input(label='Nachname')
+            st.text_input(label='Passwort',type='password')
+            st.date_input(label='Geburtsdatum')
