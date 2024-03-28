@@ -28,13 +28,13 @@ def main(logstate):
     if logstate == True:
         st.sidebar.title("Navigation")
         st.sidebar.page_link("main.py", label="Startseite", icon = "🏠")
-        st.sidebar.page_link("sign_up.py", label="Login", icon = "🔒")
-        st.sidebar.page_link("overview.py", label="Überblick", icon = "🈺")
-        st.sidebar.page_link("messeingabe.py", label="Messungen", icon = "💻")
-        st.sidebar.page_link("editor.py", label="Editor", icon = "🈺")
-        st.sidebar.page_link("logout.py", label = "Ausloggen", icon = "🔒")
+        st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
+        st.sidebar.page_link("pages/overview.py", label="Überblick", icon = "🈺")
+        st.sidebar.page_link("pages/messeingabe.py", label="Messungen", icon = "💻")
+        st.sidebar.page_link("pages/editor.py", label="Editor", icon = "🈺")
+        st.sidebar.page_link("pages/logout.py", label = "Ausloggen", icon = "🔒")
     else:
-        st.sidebar.page_link("sign_up.py", label="Login", icon = "🔒")
+        st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
 
 def empty_check(a,b,c,d,e,f):
     if a != '' and b != '' and c != '' and d != '' and e != '' and f != '':
