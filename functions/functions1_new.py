@@ -28,7 +28,7 @@ def main(logstate):
     if logstate == True:
         st.sidebar.title("Navigation")
         st.sidebar.page_link("main.py", label="Startseite", icon = "🏠")
-        st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
+        st.sidebar.page_link("pages/sign_up.py", label="Login/Registration", icon = "🔒")
         st.sidebar.page_link("pages/overview.py", label="Überblick", icon = "🈺")
         st.sidebar.page_link("pages/messeingabe.py", label="Messungen", icon = "💻")
         st.sidebar.page_link("pages/editor.py", label="Editor", icon = "🈺")
@@ -40,16 +40,16 @@ def login(username,password):
     if empty_check2(username,password):
         user_einloggen(username,password)
     else:
-        st.write('Füllen Sie beide Felder aus!')
+        st.info('Füllen Sie beide Felder aus!')
 
 def register(username,vorname,nachname,password,geburtsdatum,registerdate):
     if empty_check(username,vorname,nachname,password,geburtsdatum,registerdate) == True:
         username_check(username)
         if st.session_state['usernameavailable'] == True:
             user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate)
-            st.info('Registrierung erfolgreich, nun können sie sich einloggen',icon="🤖")       
+            st.success('Registrierung erfolgreich, nun können sie sich einloggen',icon="🤖")       
     else:
-        st.write('Füllen sie alle Felder aus')
+        st.info('Füllen sie alle Felder aus')
 
 def empty_check(a,b,c,d,e,f):
     if a != '' and b != '' and c != '' and d != '' and e != '' and f != '':
@@ -62,7 +62,17 @@ def empty_check2(a,b):
         return True
     else:
         return False
-            
+
+def proceed_login():
+    st.session_state['einloggen'] = True
+    st.session_state['registrieren'] = False
+    st.rerun()
+
+def proceed_register():
+    st.session_state['registrieren'] = True
+    st.session_state['einloggen'] = False
+    st.rerun()
+
 def username_check(username):
     if 'usernameavailable' not in st.session_state:
         st.session_state['usernameavailable'] = True
@@ -106,13 +116,15 @@ def user_einloggen(username, password):
     if len(rows) == 1:
         userid, uname, pw1, vname = rows[0]
         if uname == username and pw1 == pw:
+            st.success('eingeloggt',icon='🔒')
             st.session_state['loginstatus'] = True
-            st.write('logged in')
             st.session_state['loggedinuser'] = vname
             st.session_state['loggedinuserid'] = userid
             st.switch_page('main.py')
+        elif uname == username and pw1 != pw:
+            st.warning('falsches Passwort', icon="⚠️")    
     else:
-        st.write('keine Treffer')
+        st.warning('nicht existierender Benutzername',icon="⚠️")
 
     conn.commit()
     conn.close()
