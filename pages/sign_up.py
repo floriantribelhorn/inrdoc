@@ -16,35 +16,21 @@ if __name__ == '__main__':
     main(st.session_state['loginstatus'])
 
 if st.session_state['loginstatus'] == False:
-    with st.sidebar.container(height=280, border=True):
+    with st.sidebar.form(key='login',clear_on_submit=True,border=True):
         st.subheader('Login')
         login_username = st.text_input(label='Username ')
         login_password = st.text_input(label='Passwort ', type='password')
-        einloggen = st.button(label='Einloggen')
-    if einloggen:
-        if empty_check2(login_username,login_password):
-            user_einloggen(login_username,login_password)
-        else:
-            st.write('Füllen Sie beide Felder aus!')
-    with st.sidebar.container(height=530,border=True):
+        st.form_submit_button(on_click=login(login_username,login_password),label='Einloggen')
+        
+    with st.sidebar.form(key='register',clear_on_submit=True,border=True):
         st.subheader('Registrierung')
-        username = st.text_input(label='Username', value=st.session_state['empty'])
-        vorname = st.text_input(label='Vorname', value=st.session_state['empty'])
-        nachname = st.text_input(label='Nachname', value=st.session_state['empty'])
-        password = st.text_input(label='Passwort',type='password',value=st.session_state['empty'])
+        username = st.text_input(label='Username', key='username')
+        vorname = st.text_input(label='Vorname', key='vorname')
+        nachname = st.text_input(label='Nachname', key='nachname')
+        password = st.text_input(label='Passwort',type='password',key='pw')
         geburtsdatum = st.date_input(label='Geburtsdatum')
         registerdate = datetime.today().strftime("%A, %B %d, %Y %H:%M:%S")
-        abspeichern = st.button(label='Registrieren')
-
-        if abspeichern:
-            if empty_check(username,vorname,nachname,password,geburtsdatum,registerdate) == True:
-                username_check(username)
-                if st.session_state['usernameavailable'] == True:
-                    user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate)
-                    st.info('Registrierung erfolgreich',icon="🤖")
-                    st.switch_page('main.py')
-            else:
-                st.write('Füllen sie alle Felder aus')
+        st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate))
 else:
     with st.container(border=True):
         st.subheader('Meine Profildaten')

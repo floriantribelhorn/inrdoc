@@ -36,6 +36,21 @@ def main(logstate):
     else:
         st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
 
+def login(username,password):
+    if empty_check2(username,password):
+        user_einloggen(username,password)
+    else:
+        st.write('Füllen Sie beide Felder aus!')
+
+def register(username,vorname,nachname,password,geburtsdatum,registerdate):
+    if empty_check(username,vorname,nachname,password,geburtsdatum,registerdate) == True:
+        username_check(username)
+        if st.session_state['usernameavailable'] == True:
+            user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate)
+            st.info('Registrierung erfolgreich, nun können sie sich einloggen',icon="🤖")       
+    else:
+        st.write('Füllen sie alle Felder aus')
+
 def empty_check(a,b,c,d,e,f):
     if a != '' and b != '' and c != '' and d != '' and e != '' and f != '':
         return True
@@ -47,10 +62,7 @@ def empty_check2(a,b):
         return True
     else:
         return False
-        
-def clear_input():
-    st.session_state['empty'] = ""
-    
+            
 def username_check(username):
     if 'usernameavailable' not in st.session_state:
         st.session_state['usernameavailable'] = True
@@ -61,7 +73,6 @@ def username_check(username):
     rows = cursor.fetchall()
     
     if not rows:
-        st.write(f'Ein Profil mit Username: {username} wurde erstellt')
         st.session_state['usernameavailable'] = True
     else:
         st.write('Dieser Username ist schon vergeben')
@@ -83,7 +94,6 @@ def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate):
     conn.commit()
     conn.close()
     
-
 def user_einloggen(username, password):
     pw = md5sum(password)
     
