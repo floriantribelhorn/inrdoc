@@ -157,11 +157,14 @@ def quick_data_check(user, dauer):
     df = df.head(dauer)    
 
     fig = go.Figure(data=go.Scatter(x=df['datum'], y=df['quick'], mode='lines'))
+    cursor = conn.cursor()
+    cursor.execute('SELECT `vorname` FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
+    rows = cursor.fetchall()
 
     fig.update_layout(
-        xaxis=dict(title='Date', tickformat='%Y-%m-%d %H:%M:%S'),
-        yaxis=dict(title='Value'),
-        title=f'Quick Data for {user} (last {dauer} datapoints)',
+        xaxis=dict(title='Datum', tickformat='%Y-%m-%d'),
+        yaxis=dict(title='Quick'),
+        title=f'Quick Daten von {rows[0][0]} letzte {dauer} Dateneinträge',
     )
 
     st.plotly_chart(fig, use_container_width=False, sharing="streamlit", theme="streamlit")
