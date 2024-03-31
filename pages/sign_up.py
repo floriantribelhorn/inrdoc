@@ -48,8 +48,8 @@ if st.session_state['loginstatus'] == False:
             vorname = st.text_input(label='Vorname', key='vorname')
             nachname = st.text_input(label='Nachname', key='nachname')
             password = st.text_input(label='Passwort',type='password',key='pw')
-            geburtsdatum = st.date_input(label='Geburtsdatum')
-            registerdate = datetime.today().strftime("%A, %B %d, %Y %H:%M:%S")
+            geburtsdatum = st.date_input(label='Geburtsdatum',format='DD/MM/YYYY')
+            registerdate = datetime.today()
             st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate))
 else:
     with st.container(border=True):
@@ -58,4 +58,4 @@ else:
         st.text_input(label='Vorname')
         st.text_input(label='Nachname')
         st.text_input(label='Passwort',type='password')
-        st.date_input(label='Geburtsdatum')
+        st.date_input(label='Geburtsdatum',format='DD/MM/YYYY')

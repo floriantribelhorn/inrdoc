@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import mysql.connector
+import plotly.graph_objects as go
 
 cnxn_str = {
     'user': 'freedb_inrdocuser',
@@ -29,10 +30,10 @@ def main(logstate):
         st.sidebar.title("Navigation")
         st.sidebar.page_link("main.py", label="Startseite", icon = "🏠")
         st.sidebar.page_link("pages/sign_up.py", label="Login/Registration", icon = "🔒")
-        st.sidebar.page_link("pages/overview.py", label="Überblick", icon = "🈺")
-        st.sidebar.page_link("pages/messeingabe.py", label="Messungen", icon = "💻")
-        st.sidebar.page_link("pages/editor.py", label="Editor", icon = "🈺")
-        st.sidebar.page_link("pages/logout.py", label = "Ausloggen", icon = "🔒")
+        st.sidebar.page_link("pages/overview.py", label="Überblick", icon = "🩺")
+        st.sidebar.page_link("pages/messeingabe.py", label="Messungen", icon = "🩸")
+        st.sidebar.page_link("pages/editor.py", label="Editor", icon = "🧮")
+        st.sidebar.page_link("pages/logout.py", label = "Ausloggen", icon = "⏹️")
     else:
         st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
 
@@ -130,10 +131,8 @@ def user_einloggen(username, password):
     conn.close()
 
 def user_data_check():
-    
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
-
     cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data`')
     rows = cursor.fetchall()
 
@@ -144,7 +143,6 @@ def user_data_check():
     conn.close()
 
 def quick_data_check(user, dauer):
-    
     conn = mysql.connector.connect(**cnxn_str)
     tablename = f'quick_data_from_{user}'
     sql_query = f"""
@@ -158,18 +156,19 @@ def quick_data_check(user, dauer):
     df = df.sort_values(by=['datum', 'quick'],ascending=False)  
     df = df.head(dauer)    
 
-    ref_lines = [
-        {'line': {'color': 'red', 'dash': 'dash'}, 'value': 55},
-        {'line': {'color': 'red', 'dash': 'dash'}, 'value': 100}
-    ]
+    fig = go.Figure(data=go.Scatter(x=df['datum'], y=df['quick'], mode='lines'))
 
-    st.line_chart(df,x='datum', y='quick')
+    fig.update_layout(
+        xaxis=dict(title='Date', tickformat='%Y-%m-%d %H:%M:%S'),
+        yaxis=dict(title='Value'),
+        title=f'Quick Data for {user} (last {dauer} datapoints)',
+    )
 
+    st.plotly_chart(fig, use_container_width=False, sharing="streamlit", theme="streamlit")
     conn.commit()
     conn.close()
 
 def quick_empty(user, date):
-    
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
     table = f'quick_data_from_{user}'
@@ -184,17 +183,14 @@ def quick_empty(user, date):
         return False
 
 def quick_eintrag(quick,date):
-    
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
     currentuserid = st.session_state['loggedinuserid']
     tablename = f'quick_data_from_{currentuserid}'
-
     cursor.execute(f"""
         INSERT INTO `freedb_inrdoc`.`{tablename}` (quick, datum, user)
         VALUES (%s,%s,%s)
         """, (quick,date,st.session_state['loggedinuserid']))
-
     conn.commit()
     conn.close()
 
@@ -214,13 +210,12 @@ def zeitraum(zeitraum):
     return zeitraum2
 
 def editoranzeige(user,bereich):
-
         conn = mysql.connector.connect(**cnxn_str)
         tablename = f'quick_data_from_{user}'
         sql_query = f"""
         SELECT * FROM `{tablename}` ORDER BY `datum` ASC
         """
-        
+    
         df = pd.read_sql(sql_query, conn)
         df = df.drop(columns=['id','user'])
         df = df.sort_values('datum') 

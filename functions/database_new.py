@@ -16,8 +16,8 @@ def user_database():
     cur = conn.cursor()
 
     cur.execute(""" CREATE TABLE IF NOT EXISTS`freedb_inrdoc`.`user_data` (`id` INT NOT NULL AUTO_INCREMENT , `username` TEXT NOT NULL ,
-             `vorname` TEXT NOT NULL , `nachname` TEXT NOT NULL , `register_date` TEXT NOT NULL ,
-             `birthdate` TEXT NOT NULL , `password` TEXT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;""")
+             `vorname` TEXT NOT NULL , `nachname` TEXT NOT NULL , `register_date` DATE NOT NULL ,
+             `birthdate` DATE NOT NULL , `password` TEXT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;""")
 
     conn.commit()
     conn.close()
@@ -33,7 +33,7 @@ def setup_quickdatabase(someoneloggedin):
         tablename = f'quick_data_from_{currentuserid}'
         cur.execute(f"""CREATE TABLE IF NOT EXISTS `freedb_inrdoc`.`{tablename}` (`id` INT NOT NULL AUTO_INCREMENT, 
                     `quick` TEXT NOT NULL,
-                    `datum` TEXT NOT NULL,
+                    `datum` DATE NOT NULL,
                     `user` TEXT NOT NULL,
                     PRIMARY KEY (`id`)) ENGINE = InnoDB;""")
 
