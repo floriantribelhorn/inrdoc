@@ -1,7 +1,7 @@
 import streamlit as st
-from functions.functions1_new import *
-from functions.database_new import *
-import hashlib as ha
+from functions.utilities import *
+from functions.user_functions import *
+from functions.quick_functions import *
 from datetime import datetime
 
 if 'loginstatus' not in st.session_state:

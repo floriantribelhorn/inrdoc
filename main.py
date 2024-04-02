@@ -1,7 +1,8 @@
 import streamlit as st
-import numpy as np
 from functions.database_new import *
-from functions.functions1_new import *
+from functions.utilities import *
+from functions.user_functions import *
+from functions.quick_functions import *
 
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
