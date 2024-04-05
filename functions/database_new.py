@@ -2,12 +2,12 @@ import streamlit as st
 import mysql.connector
 
 cnxn_str = {
-    'user': 'freedb_inrdocuser',
-    'password': '?$R8*?pKxKvmg5X',
-    'host': 'sql.freedb.tech',
-    'database': 'freedb_inrdoc',
-    'port': '3306',
-    'auth_plugin':'mysql_native_password'
+    'user': st.secrets.db_credentials.user,
+    'password': st.secrets.db_credentials.password,
+    'host': st.secrets.db_credentials.host,
+    'database': st.secrets.db_credentials.database,
+    'port': st.secrets.db_credentials.port,
+    'auth_plugin': st.secrets.db_credentials.auth_plugin
 }
 
 def user_database():
