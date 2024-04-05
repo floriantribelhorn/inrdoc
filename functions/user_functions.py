@@ -93,3 +93,36 @@ def user_data_check():
 
     conn.commit()
     conn.close()
+
+def meine_userdaten11(user):
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
+    rows = cursor.fetchall()
+
+    with st.container(border=True):
+        st.subheader('Meine Profildaten')
+        st.text_input(label='Username',value=1)
+        st.text_input(label='Vorname',value=2)
+        st.text_input(label='Nachname',value=3)
+        st.text_input(label='Passwort',type='password',value=4)
+        st.date_input(label='Geburtsdatum',format='DD/MM/YYYY',value=5)
+
+def meine_userdaten(user):
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
+    rows = cursor.fetchall()
+
+    with st.container(border=True):
+        st.subheader('Meine Profildaten')
+        for row in rows:
+            id, username, first_name, last_name, register_date, birthdate, password = row
+            st.text_input(label='Username', value=username)
+            st.text_input(label='Vorname', value=first_name)
+            st.text_input(label='Nachname', value=last_name)
+            st.text_input(label='Passwort', type='password', value=password)
+            st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
+            st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')

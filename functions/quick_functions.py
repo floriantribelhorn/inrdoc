@@ -74,7 +74,7 @@ def quick_eintrag(quick,date):
     my_bar = st.progress(0, text=progress_text)
 
     for percent_complete in range(100):
-        time.sleep(0.03)
+        time.sleep(0.01)
         my_bar.progress(percent_complete + 1, text=progress_text)
     time.sleep(1)
     my_bar.empty()
@@ -92,23 +92,45 @@ def quick_eintrag(quick,date):
     conn.commit()
     conn.close()
 
-def editoranzeige(user,bereich):
-        conn = mysql.connector.connect(**cnxn_str)
-        tablename = f'quick_data_from_{user}'
-        sql_query = f"""
-        SELECT * FROM `{tablename}` WHERE YEAR(datum) = {bereich} ORDER BY `datum` ASC
-        """
+def jzaehlen(user):
+    conn = mysql.connector.connect(**cnxn_str)
+    sqlquery = f"""
+    SELECT YEAR(`datum`) AS Year, COUNT(*) AS Count
+    FROM `quick_data_from_{user}`
+    GROUP BY Year
+    ORDER BY Year ASC;
+    """
+    df = pd.read_sql(sqlquery, conn)
 
-        df = pd.read_sql(sql_query, conn)
-        df = df.drop(columns=['id','user'])
-        df = df.sort_values('datum') 
-        df['quick'] = df['quick'].astype(float)  
-        df = df.sort_values(by=['datum', 'quick'],ascending=False) 
-        df['checkbox'] = df.index
+    # Anzahl Tabs = Anzahl Jahre in DF
+    num_tabs = len(df)
 
-        conn.commit()
-        conn.close()
+    # Tabs erstellen
+    tab_titles = [f'Jahr {year}' for year in df['Year'].tolist()[:num_tabs]]
+    tabs = st.tabs(tab_titles)
 
-        for i, row in df.iterrows():
-            st.checkbox(label=f"{row['datum'] , row['quick']}")
+    # Checkboxes dem jeweiligen Tab hinzufügen
+    for i, year in enumerate(df['Year'].tolist()[:num_tabs]):
+        with tabs[i]:
+            conn = mysql.connector.connect(**cnxn_str)
+            tablename = f'quick_data_from_{user}'
+            sql_query = f"""
+            SELECT * FROM `{tablename}` WHERE YEAR(datum) = {year} ORDER BY `datum` ASC
+            """
+            df = pd.read_sql(sql_query, conn)
+            df = df.drop(columns=['id','user'])
+            df = df.sort_values('datum') 
+            df['quick'] = df['quick'].astype(float)  
+            df = df.sort_values(by=['datum', 'quick'],ascending=False) 
+            df['checkbox'] = df.index
 
+            conn.commit()
+            conn.close()
+
+            num_checks = len(df)
+            num_cols = (num_checks // 25) + (num_checks % 25 > 0)
+            cols = st.columns(num_cols)
+
+            for i, row in df.iterrows():
+                with cols[i % num_cols]:
+                    st.checkbox(label=f"Datum: {row['datum']} - Quick: {row['quick']}")

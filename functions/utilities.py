@@ -1,6 +1,5 @@
 import streamlit as st
 import hashlib
-from functions.quick_functions import editoranzeige
 
 def main(logstate):
     st.set_page_config(page_title='INR Dokumentation', page_icon="🏠", layout="wide", initial_sidebar_state="expanded")

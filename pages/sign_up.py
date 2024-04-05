@@ -52,10 +52,4 @@ if st.session_state['loginstatus'] == False:
             registerdate = datetime.today()
             st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate))
 else:
-    with st.container(border=True):
-        st.subheader('Meine Profildaten')
-        st.text_input(label='Username')
-        st.text_input(label='Vorname')
-        st.text_input(label='Nachname')
-        st.text_input(label='Passwort',type='password')
-        st.date_input(label='Geburtsdatum',format='DD/MM/YYYY')
+    meine_userdaten(st.session_state['loggedinuserid'])
