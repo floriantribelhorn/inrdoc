@@ -92,7 +92,24 @@ def quick_eintrag(quick,date):
     conn.commit()
     conn.close()
 
+def loeschen_eintraege(daten,user):
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+    tablename = f'quick_data_from_{user}'
+    cursor.execute(f"""
+        DELETE FROM `freedb_inrdoc`.`{tablename}` WHERE datum = %s""", (daten,))
+    num_rows_deleted = cursor.rowcount
+    if num_rows_deleted == 1:
+        st.success(f"Eintrag vom {daten} was deleted successfully.")
+    elif num_rows_deleted > 1:
+        st.success(f"{num_rows_deleted} Einträge {daten} were deleted successfully.")
+    else:
+        st.warning(f"Kein Eintrag mit :blue[Datum] {daten} were found in the table {tablename}.")
+    conn.commit()
+    conn.close()
+
 def jzaehlen(user):
+    alles = st.checkbox(label='Alles auswählen')
     conn = mysql.connector.connect(**cnxn_str)
     sqlquery = f"""
     SELECT YEAR(`datum`) AS Year, COUNT(*) AS Count
@@ -131,6 +148,24 @@ def jzaehlen(user):
             num_cols = (num_checks // 25) + (num_checks % 25 > 0)
             cols = st.columns(num_cols)
 
-            for i, row in df.iterrows():
-                with cols[i % num_cols]:
-                    st.checkbox(label=f"Datum: {row['datum']} - Quick: {row['quick']}")
+            with st.form(key=f'loeschen{i}'):
+                checked_boxes = {}
+                for i, row in df.iterrows():
+                    with cols[i % num_cols]:
+                        checked_boxes[row['datum']] = st.checkbox(label=f":blue[Datum]: {row['datum']} - :orange[Quick]: {row['quick']}", key=f'value_from_{row["datum"]}')
+                        if f'value_from_{row["datum"]}' not in st.session_state:
+                            st.session_state[f'value_from_{row["datum"]}'] = False
+                submit_button = st.form_submit_button(label='Einträge :red[LÖSCHEN]')
+                if submit_button:
+                        selected_dates = [date for date, checked in checked_boxes.items() if checked]
+                        for row in selected_dates:
+                            loeschen_eintraege(row,st.session_state['loggedinuserid'])
+                        else:
+                            st.rerun()
+                if alles:
+                    nichtgewählte = [key for key, checked in checked_boxes.items() if not checked]
+                    st.success(nichtgewählte)
+                    for state in nichtgewählte:
+                        st.session_state[f'{state}'] = True
+                        st.write(st.session_state[f'{state}'])
+                        

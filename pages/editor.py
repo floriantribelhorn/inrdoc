@@ -15,4 +15,5 @@ if __name__ == '__main__':
     main(st.session_state['loginstatus'])
     if st.session_state['loginstatus'] != False:
         with st.container(border=True):
+            st.title('Meine Quick-Daten')
             jzaehlen(st.session_state['loggedinuserid'])
