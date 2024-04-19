@@ -12,7 +12,7 @@ if __name__ == '__main__':
     main(st.session_state['loginstatus'])
 
 if st.session_state['loginstatus'] != False:
-    with st.container(border=True):
+    with st.expander(label='Zeitraum anzeigen',expanded=False):
         zeit = st.selectbox('Quick-Werte Zeitraum:', ('5 Tage','10 Tage', '30 Tage', '2 Monate','6 Monate','1 Jahr'))
         zeigen = st.button('Werte ausgeben')
 

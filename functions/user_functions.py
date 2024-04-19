@@ -28,7 +28,7 @@ def register(username,vorname,nachname,password,geburtsdatum,registerdate):
 
 def username_check(username):
     if 'usernameavailable' not in st.session_state:
-        st.session_state['usernameavailable'] = True
+        st.session_state['usernameavailable'] = False
     
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
@@ -38,7 +38,7 @@ def username_check(username):
     if not rows:
         st.session_state['usernameavailable'] = True
     else:
-        st.write('Dieser Username ist schon vergeben')
+        st.error('Dieser Username ist schon vergeben!')
         st.session_state['usernameavailable'] = False
     
     conn.commit()
@@ -94,20 +94,50 @@ def user_data_check():
     conn.commit()
     conn.close()
 
-def meine_userdaten11(user):
+def update_username(id, username):
     conn = mysql.connector.connect(**cnxn_str)
     cursor = conn.cursor()
-
-    cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
+    cursor.execute('SELECT `username` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
+    if 'changedname' not in st.session_state:
+        st.session_state['changedname'] = False
+        st.session_state['changedname'] = rows[0][0]
+    conn.commit()
+    conn.close()
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `username` = %s WHERE `id` = %s', (username, id,))
+    num_rows_updated = cursor.rowcount
+    cn = st.session_state['changedname']
+    if num_rows_updated != '':
+        st.success(f'Username von {cn} zu {username} geändert.')
+    conn.commit()
+    conn.close()
 
-    with st.container(border=True):
-        st.subheader('Meine Profildaten')
-        st.text_input(label='Username',value=1)
-        st.text_input(label='Vorname',value=2)
-        st.text_input(label='Nachname',value=3)
-        st.text_input(label='Passwort',type='password',value=4)
-        st.date_input(label='Geburtsdatum',format='DD/MM/YYYY',value=5)
+def name_update(id,vorname,nachname):
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+    cursor.execute('SELECT `vorname`,`nachname` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
+    rows = cursor.fetchall()
+    vorname1 = rows[0][0]
+    nachname1 = rows[0][1]
+    conn.commit()
+    conn.close()
+    conn = mysql.connector.connect(**cnxn_str)
+    cursor = conn.cursor()
+    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `vorname` = %s,`nachname` = %s WHERE `id` = %s', (vorname,nachname, id,))
+    num_rows_updated = cursor.rowcount
+    if num_rows_updated != '':
+        if vorname1 == vorname and nachname1 == nachname:
+            st.info('Alles beim alten, nichts wurde geändert')
+        elif vorname1 != vorname and nachname1 == nachname:
+            st.info(f'Vorname von {vorname1} zu {vorname} geändert.')
+        elif vorname1 == vorname and nachname1 != nachname:
+            st.info(f'Nachname von {nachname1} zu {nachname} geändert.')
+        else:
+            st.info(f'Vorname von {vorname1} zu {vorname} und Nachname von {nachname1} zu {nachname} geändert.')
+    conn.commit()
+    conn.close()
 
 def meine_userdaten(user):
     conn = mysql.connector.connect(**cnxn_str)
@@ -120,9 +150,19 @@ def meine_userdaten(user):
         st.subheader('Meine Profildaten')
         for row in rows:
             id, username, first_name, last_name, register_date, birthdate, password = row
-            st.text_input(label='Username', value=username)
-            st.text_input(label='Vorname', value=first_name)
-            st.text_input(label='Nachname', value=last_name)
-            st.text_input(label='Passwort', type='password', value=password)
-            st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
+            un = st.text_input(label='Username', value=username, key='uname')
+            vn = st.text_input(label='Vorname', value=first_name)
+            sn = st.text_input(label='Nachname', value=last_name)
+            bd = st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
             st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')
+        namen_update = st.button(label='Namen ändern')
+        username_update = st.button(label='Username ändern')
+        gebdat_update = st.button(label='Geburtsdatum ändern')
+        st.button(label='Passwort ändern')
+
+        if username_update:
+            username_check(un)
+            if st.session_state['usernameavailable'] == True:
+                update_username(user,un)
+        if namen_update:
+            name_update(id,vn,sn)
