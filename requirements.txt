@@ -3,6 +3,5 @@ numpy
 streamlit
 datetime
 pandas
-mysql.connector
 mysql.connector.python
 plotly
