@@ -3,9 +3,7 @@ import hashlib
 
 def main(logstate):
     st.set_page_config(page_title='INR Dokumentation', page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
-    if logstate != True:
-        st.subheader("Zur Zeit ist niemand eingeloggt, bitte loggen Sie sich links in der Navigation ein!")
-    #st.subheader(f"Hallo {st.session_state['loggedinuser']}! {st.session_state['aktuell']}")
+    
     if logstate == True:
         st.sidebar.title("Navigation")
         st.sidebar.page_link("main.py", label="Startseite", icon = "🏠")
@@ -14,8 +12,10 @@ def main(logstate):
         st.sidebar.page_link("pages/messeingabe.py", label="Messungen", icon = "🩸")
         st.sidebar.page_link("pages/editor.py", label="Editor", icon = "🧮")
         st.sidebar.page_link("pages/logout.py", label = "Ausloggen", icon = "⏹️")
+        st.sidebar.text(f"Hallo {st.session_state['loggedinuser']}!")
     else:
         st.sidebar.page_link("pages/sign_up.py", label="Login", icon = "🔒")
+        st.sidebar.text('Loggen Sie sich ein!')
 
 def md5sum(t):
     return hashlib.md5(t.encode('utf-8')).hexdigest()
