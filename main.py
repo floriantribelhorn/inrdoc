@@ -13,6 +13,9 @@ if 'loggedinuser' not in st.session_state:
 if 'loggedinuserid' not in st.session_state:
     st.session_state['loggedinuserid'] = False
 
+if 'medikament' not in st.session_state:
+    st.session_state['medikament'] = False
+
 if 'aktuell' not in st.session_state:
     st.session_state['aktuell'] = 'Startseite'
 else:

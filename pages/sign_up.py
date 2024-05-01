@@ -4,6 +4,8 @@ from functions.user_functions import *
 from functions.quick_functions import *
 from datetime import datetime
 
+medi_liste = {'Phenprocoumon (Marcoumar®) (CH)':1,'Warfarin (Coumadin®) (USA)':2,'(Sintrom®, Sintrom® mitis) (CH)':3}
+
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
@@ -12,6 +14,9 @@ if 'einloggen' not in st.session_state:
 
 if 'registrieren' not in st.session_state:
     st.session_state['registrieren'] = False
+
+if 'medikament' not in st.session_state:
+    st.session_state['medikament'] = False
 
 st.session_state['aktuell'] = 'Meine Daten'
 
@@ -49,7 +54,9 @@ if st.session_state['loginstatus'] == False:
             nachname = st.text_input(label='Nachname', key='nachname')
             password = st.text_input(label='Passwort',type='password',key='pw')
             geburtsdatum = st.date_input(label='Geburtsdatum',format='DD/MM/YYYY')
+            med = st.selectbox(label='Medikament',options=list(medi_liste.keys()),placeholder='Wählen Sie Ihr derzeitiges Medikament aus!')
+            mednr = medi_liste[med]
             registerdate = datetime.today()
-            st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate))
+            st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate,mednr))
 else:
     meine_userdaten(st.session_state['loggedinuserid'])
