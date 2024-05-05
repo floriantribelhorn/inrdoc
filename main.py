@@ -3,6 +3,7 @@ from functions.database_new import *
 from functions.utilities import *
 from functions.user_functions import *
 from functions.quick_functions import *
+from functions.cnx import *
 
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
