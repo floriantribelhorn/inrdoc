@@ -1,17 +1,17 @@
 import streamlit as st
 import mysql.connector
 from functions.utilities import *
+from functions.cnx import *
 
-medi_liste = {'Phenprocoumon (Marcoumar®) (CH)':1,'Warfarin (Coumadin®) (USA)':2,'(Sintrom®, Sintrom® mitis) (CH)':3}
-
-cnxn_str = {
-    'user': st.secrets.db_credentials.user,
-    'password': st.secrets.db_credentials.password,
-    'host': st.secrets.db_credentials.host,
-    'database': st.secrets.db_credentials.database,
-    'port': st.secrets.db_credentials.port,
-    'auth_plugin': st.secrets.db_credentials.auth_plugin
-}
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `freedb_inrdoc`.`drugs`')
+rows = cursor.fetchall()
+drugs_dict = {}
+for name, nr in rows:
+    drugs_dict[name] = nr
+conn.commit()
+conn.close()
 
 def login(username,password):
     if empty_check2(username,password):
@@ -32,7 +32,7 @@ def username_check(username):
     if 'usernameavailable' not in st.session_state:
         st.session_state['usernameavailable'] = False
     
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT `username` FROM `freedb_inrdoc`.`user_data` WHERE username = %s',(username,))
     rows = cursor.fetchall()
@@ -49,7 +49,7 @@ def username_check(username):
 def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med):
     passwordcheck = md5sum(password)
     
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -62,7 +62,7 @@ def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,me
 def user_einloggen(username, password):
     pw = md5sum(password)
     
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
 
     cursor.execute('SELECT `id`,`username`, `password`,`vorname`, `med` FROM `freedb_inrdoc`.`user_data` WHERE username = %s', (username,))
@@ -87,7 +87,7 @@ def user_einloggen(username, password):
     conn.close()
 
 def user_data_check():
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data`')
     rows = cursor.fetchall()
@@ -99,7 +99,7 @@ def user_data_check():
     conn.close()
 
 def update_username(id, username):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT `username` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
@@ -108,7 +108,7 @@ def update_username(id, username):
         st.session_state['changedname'] = rows[0][0]
     conn.commit()
     conn.close()
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `username` = %s WHERE `id` = %s', (username, id,))
     num_rows_updated = cursor.rowcount
@@ -119,7 +119,7 @@ def update_username(id, username):
     conn.close()
 
 def name_update(id,vorname,nachname):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT `vorname`,`nachname` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
@@ -127,7 +127,7 @@ def name_update(id,vorname,nachname):
     nachname1 = rows[0][1]
     conn.commit()
     conn.close()
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `vorname` = %s,`nachname` = %s WHERE `id` = %s', (vorname,nachname, id,))
     num_rows_updated = cursor.rowcount
@@ -145,14 +145,14 @@ def name_update(id,vorname,nachname):
     conn.close()
 
 def birthdate_update(id,bd):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT `birthdate` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
     altbd = rows[0][0]
     conn.commit()
     conn.close()
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `birthdate` = %s WHERE `id` = %s', (bd, id,))
     num_rows_updated = cursor.rowcount
@@ -164,11 +164,14 @@ def birthdate_update(id,bd):
     conn.close()
 
 def med_updater(user,medi):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('SELECT `med` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (user,))
     rows = cursor.fetchall()
     altmed = rows[0][0]
+    for key, value in drugs_dict.items():
+        if value == altmed:
+            altmed = key
     conn.commit()
     conn.close()
     if medi == 'Phenprocoumon (Marcoumar®) (CH)':
@@ -179,7 +182,7 @@ def med_updater(user,medi):
         um = 3
     else:
         um = 0
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `med` = %s WHERE `id` = %s', (um, user,))
     num_rows_updated = cursor.rowcount
@@ -191,7 +194,7 @@ def med_updater(user,medi):
     conn.close()
 
 def meine_userdaten(user):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
 
     cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
@@ -205,7 +208,7 @@ def meine_userdaten(user):
             vn = st.text_input(label='Vorname', value=first_name)
             sn = st.text_input(label='Nachname', value=last_name)
             bd = st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
-            medi = st.selectbox(label='Medikament',options=medi_liste,index=med-1)
+            medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1)
             st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')
         namen_update = st.button(label='Namen ändern')
         username_update = st.button(label='Username ändern')

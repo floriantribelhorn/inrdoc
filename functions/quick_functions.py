@@ -5,18 +5,10 @@ import matplotlib.dates as mdates
 import mysql.connector
 import plotly.graph_objects as go
 import time
-
-cnxn_str = {
-    'user': st.secrets.db_credentials.user,
-    'password': st.secrets.db_credentials.password,
-    'host': st.secrets.db_credentials.host,
-    'database': st.secrets.db_credentials.database,
-    'port': st.secrets.db_credentials.port,
-    'auth_plugin': st.secrets.db_credentials.auth_plugin
-}
+from functions.cnx import *
 
 def quick_data_check(user, dauer):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     sql_query = f"""
     SELECT * FROM `freedb_inrdoc`.`main_quick_data` WHERE user = {user} ORDER BY `datum` ASC
     """
@@ -44,7 +36,7 @@ def quick_data_check(user, dauer):
     conn.close()
 
 def quick_empty(user, date):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute(f'SELECT `datum` FROM `freedb_inrdoc`.`main_quick_data` WHERE datum = %s AND user = %s', (date,user,))
     rows = cursor.fetchall()
@@ -57,7 +49,7 @@ def quick_empty(user, date):
         return False
 
 def quick_eintrag(quick,date):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     id = st.session_state['loggedinuserid']
     cursor.execute(f'SELECT `med` FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (id,))
@@ -68,7 +60,7 @@ def quick_eintrag(quick,date):
 
     if rows[0][0] != 0:
         med2 = rows[0][0]
-        conn = mysql.connector.connect(**cnxn_str)
+        conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
         currentuserid = st.session_state['loggedinuserid']
         cursor.execute(f"""
@@ -87,7 +79,7 @@ def quick_eintrag(quick,date):
         time.sleep(1)
         my_bar.empty()
 
-        conn = mysql.connector.connect(**cnxn_str)
+        conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT `quick` from `freedb_inrdoc`.`main_quick_data` WHERE datum = %s AND user = %s""", (date,id))
@@ -101,7 +93,7 @@ def quick_eintrag(quick,date):
         st.info('Sie haben noch kein Medikament in Ihrem Profil erfasst!')
 
 def loeschen_eintraege(daten,user):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     cursor.execute(f"""
         DELETE FROM `freedb_inrdoc`.`main_quick_data` WHERE datum = %s AND user = %s""", (daten,user,))
@@ -117,7 +109,7 @@ def loeschen_eintraege(daten,user):
 
 def jzaehlen(user):
     alles = st.checkbox(label='Alles auswählen')
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     sqlquery = f"""
     SELECT YEAR(`datum`) AS Year, COUNT(*) AS Count
     FROM `main_quick_data`
@@ -137,7 +129,7 @@ def jzaehlen(user):
     # Checkboxes dem jeweiligen Tab hinzufügen
     for i, year in enumerate(df['Year'].tolist()[:num_tabs]):
         with tabs[i]:
-            conn = mysql.connector.connect(**cnxn_str)
+            conn = mysql.connector.connect(**connex())
             sql_query = f"""
             SELECT * FROM `main_quick_data` WHERE YEAR(datum) = {year} AND user = {user} ORDER BY `datum` ASC
             """

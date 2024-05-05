@@ -1,17 +1,9 @@
 import streamlit as st
 import mysql.connector
-
-cnxn_str = {
-    'user': st.secrets.db_credentials.user,
-    'password': st.secrets.db_credentials.password,
-    'host': st.secrets.db_credentials.host,
-    'database': st.secrets.db_credentials.database,
-    'port': st.secrets.db_credentials.port,
-    'auth_plugin': st.secrets.db_credentials.auth_plugin
-}
+from functions.cnx import *
 
 def user_database():
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cur = conn.cursor()
     cur.execute(""" CREATE TABLE IF NOT EXISTS`freedb_inrdoc`.`user_data` (`id` INT NOT NULL AUTO_INCREMENT , `username` TEXT NOT NULL ,
              `vorname` TEXT NOT NULL , `nachname` TEXT NOT NULL , `register_date` DATE NOT NULL ,
@@ -20,7 +12,7 @@ def user_database():
     conn.close()
 
 def setup_quickdatabase(someoneloggedin):
-    conn = mysql.connector.connect(**cnxn_str)
+    conn = mysql.connector.connect(**connex())
     cur = conn.cursor()
     if someoneloggedin != False:
         cur = conn.cursor()
