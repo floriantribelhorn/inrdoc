@@ -33,7 +33,15 @@ if __name__ == '__main__':
         st.header('2. Hintergrund')
         st.markdown('Der Quick-Wert variiert je nach Empfindlichkeit des Thromboplastins. Diese ist u.a. davon abhängig, aus welchem Organismus (z.B. Kaninchen, Rind oder Mensch) und welchem Organ (Lunge, Gehirn oder Plazenta) das Thromboplastin gewonnen wurde. Um Variabilität für die Berechnung der INR auszugleichen, wird der International Sensitivity Index (ISI) eingesetzt. Dieser Index wird im Vergleich zu einem Referenz-Thromboplastin bestimmt, das bereits 1983 durch die WHO definiert wurde.')
         st.header('3. Berechnung')
-        st.latex(r'''\frac{Gerinnungszeit Patientenplasma}{Gerinnungszeit Normalplasma}''')
+        st.latex(r'''\begin{equation*}
+        \text{INR} = \left(\frac{\text{TPZ(Patient [sec])}}{\text{TPZ(Referenz/Normalplasma [sec])}}\right)^{\text{ISI}}
+        \end{equation*}''')
+        st.latex(r'''\begin{equation*}
+        \text{Quick in \%} = \left(\frac{\text{TPZ(Patient [sec])}}{\text{TPZ(Referenz/Normalplasma [sec])}}\right)
+        \end{equation*}''')
+        st.latex(r'''\text{ISI} = \text{International Sensitivity Index: Reagenz-abhängig}''')
+        st.latex(r'''\text{INR} = \text{International Normalized Ratio}''')
+        st.latex(r'''\text{TPZ} = \text{Thromboplastinzeit}''')
         st.header('4. Interpretation')
         st.markdown('Die INR verhält sich zum Quick-Wert umgekehrt proportional: -Mit abnehmendem Quick-Wert wird die INR größer -Mit zunehmendem Quick-Wert wird die INR kleiner Normwertig ist eine INR von 0,85 bis 1,15. Eine INR von 1,0 entspricht dabei einem Quick-Wert von 100%. Therapeutische INR-Werte bei medikamentöser Antikoagulation liegen in der Regel zwischen 2,0 und 3,5.')
         st.header('5. Verwendung')
