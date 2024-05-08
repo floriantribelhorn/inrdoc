@@ -28,7 +28,7 @@ conn.close()
 
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
-cursor.execute('SELECT `lotnr`,`expiry` FROM `freedb_inrdoc`.`lot_data`')
+cursor.execute('SELECT `lotnr`,`expiry`,`isi` FROM `freedb_inrdoc`.`lot_data`')
 rows = cursor.fetchall()
 lot_dict = {}
 for name, nr in rows:
@@ -55,3 +55,5 @@ if st.session_state['loginstatus'] != False:
                     st.info(f"Am {datum1} existiert bereits eine eingetragene Messung.")
     else:
         st.text('Noch kein Medikament erfasst!')
+else:
+    st.switch_page('main.py')

@@ -20,3 +20,5 @@ if st.session_state['loginstatus'] != False:
     if zeigen:
         dauer = zeitraum(zeit)
         quick_data_check(st.session_state['loggedinuserid'],dauer)
+else:
+    st.switch_page('main.py')
