@@ -38,21 +38,24 @@ conn.close()
 
 if st.session_state['loginstatus'] != False:
     if st.session_state['medikament'] == True:
-        with st.container(border=True):
+        with st.expander(label='aktuelle Messumgebung (Gerät/LOT-NR. des Reagenz)',expanded=False):
             st.subheader('aktuelle Messumgebung')
             geraet = st.selectbox(label='Messgerät',options=device_dict,index=1)
             lot = st.selectbox(label='aktuelle LOT',options=lot_dict,index=1)
-        with st.container(border=True):
+        with st.expander(label='Dateneingabe',expanded=False):
             st.subheader('Quick-Eingabe')
             heutigerquick = st.number_input(label = "Quick-Messwert", min_value=0, max_value=130, step=1)
             datum = st.date_input('Zeitpunkt der Messung',format='DD/MM/YYYY')
             abspeichern = st.button('Quick jetzt abspeichern')
             if abspeichern:
-                if not quick_empty(st.session_state['loggedinuserid'],datum):
-                    quick_eintrag(heutigerquick,datum)
+                if futuredate(datum) == False:
+                    if not quick_empty(st.session_state['loggedinuserid'],datum):
+                        quick_eintrag(heutigerquick,datum)
+                    else:
+                        datum1 = datum.strftime('%d-%m-%Y')
+                        st.info(f"Am {datum1} existiert bereits eine eingetragene Messung.")
                 else:
-                    datum1 = datum.strftime('%d-%m-%Y')
-                    st.info(f"Am {datum1} existiert bereits eine eingetragene Messung.")
+                    st.info('Sie versuchen den Messwert an einem zukünftigen Datum abzuspeichern!')
     else:
         st.text('Noch kein Medikament erfasst!')
 else:

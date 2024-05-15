@@ -62,10 +62,11 @@ if st.session_state['loginstatus'] == False:
             vorname = st.text_input(label='Vorname', key='vorname')
             nachname = st.text_input(label='Nachname', key='nachname')
             password = st.text_input(label='Passwort',type='password',key='pw')
+            pass_repeat = st.text_input(label='Passwort wiederholen',type='password',key='pwwdh')
             geburtsdatum = st.date_input(label='Geburtsdatum',format='DD/MM/YYYY')
             med = st.selectbox(label='Medikament',options=list(drugs_dict.keys()),placeholder='Wählen Sie Ihr derzeitiges Medikament aus!')
             mednr = drugs_dict[med]
             registerdate = datetime.today()
-            st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,geburtsdatum,registerdate,mednr))
+            st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,pass_repeat,geburtsdatum,registerdate,mednr))
 else:
     meine_userdaten(st.session_state['loggedinuserid'])
