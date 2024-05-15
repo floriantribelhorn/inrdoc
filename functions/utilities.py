@@ -1,5 +1,7 @@
 import streamlit as st
 import hashlib
+from datetime import datetime as dt
+from datetime import timedelta as td
 
 def main(logstate):
     st.set_page_config(page_title='INR Dokumentation', page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
@@ -31,6 +33,12 @@ def empty_check2(a,b):
         return True
     else:
         return False
+
+def empty_check3(a,b,c,d,e,f,g):
+    if a != '' and b != '' and c != '' and d != '' and e != '' and f != '' and g != '':
+        return True
+    else:
+        return False 
     
 def proceed_login():
     st.session_state['einloggen'] = True
@@ -56,3 +64,18 @@ def zeitraum(zeitraum):
     elif zeitraum == '1 Jahr':
         zeitraum2 = 360
     return zeitraum2
+
+def quick_formula_calc_inr(quick,isi,refquick):
+    inr = (quick/refquick)**isi
+    return inr
+
+def quick_formula_calc_quick(inr,isi,refquick):
+    quick = (inr**(1/isi))*refquick
+    return quick
+
+def futuredate(date):
+    today = dt.today().date()
+    if date > today + td(0):
+        return True
+    else:
+        return False

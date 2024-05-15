@@ -2,6 +2,7 @@ import streamlit as st
 import mysql.connector
 from functions.utilities import *
 from functions.cnx import *
+from datetime import datetime
 
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
@@ -13,18 +14,31 @@ for name, nr in rows:
 conn.commit()
 conn.close()
 
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `device_name`,`device_nr` FROM `freedb_inrdoc`.`devices`')
+rows = cursor.fetchall()
+device_dict = {}
+for name, nr in rows:
+    device_dict[name] = nr
+conn.commit()
+conn.close()
+
 def login(username,password):
     if empty_check2(username,password):
         user_einloggen(username,password)
     else:
         st.info('Füllen Sie beide Felder aus!')
 
-def register(username,vorname,nachname,password,geburtsdatum,registerdate,med):
-    if empty_check(username,vorname,nachname,password,geburtsdatum,registerdate) == True:
-        username_check(username)
-        if st.session_state['usernameavailable'] == True:
-            user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med)
-            st.success('Registrierung erfolgreich, nun können sie sich einloggen',icon="🤖")       
+def register(username,vorname,nachname,password,password_repeat,geburtsdatum,registerdate,med):
+    if empty_check3(username,vorname,nachname,password,password_repeat,geburtsdatum,registerdate) == True:
+        if password == password_repeat:
+            username_check(username)
+            if st.session_state['usernameavailable'] == True:
+                user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med)
+                st.success('Registrierung erfolgreich, nun können sie sich einloggen',icon="🤖")   
+        else:
+            st.warning('Passwörter stimmen nicht überein🔥')    
     else:
         st.info('Füllen sie alle Felder aus')
 
@@ -45,6 +59,18 @@ def username_check(username):
     
     conn.commit()
     conn.close()
+
+def device_check(user):
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('SELECT `new_device` FROM `freedb_inrdoc`.`device_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
+    rows = cursor.fetchone()
+    conn.commit()
+    conn.close()
+    if not rows:
+        return False
+    else:
+        return rows[0]
 
 def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med):
     passwordcheck = md5sum(password)
@@ -77,7 +103,10 @@ def user_einloggen(username, password):
             st.session_state['loggedinuserid'] = userid
             if medi != '0':
                 st.session_state['medikament'] = True
-            st.switch_page('main.py')
+                if device_check(userid) == False:
+                    st.switch_page('pages/update.py')
+                else:
+                    st.switch_page('main.py')
         elif uname == username and pw1 != pw:
             st.warning('falsches Passwort', icon="⚠️")    
     else:
@@ -193,36 +222,91 @@ def med_updater(user,medi):
     conn.commit()
     conn.close()
 
+def device_update(device):
+    user = st.session_state['loggedinuserid']
+    date = datetime.today()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (new_device, user, updated) VALUES  (%s,%s,%s) ''', (device, user, date))
+    num_rows_updated = cursor.rowcount
+    if num_rows_updated:
+        st.success('Messgerät aktualisiert! Drücken Sie den Knopf "Weiterfahren"')
+    else:
+        st.info('Hat nicht geklappt!')
+    conn.commit()
+    conn.close()
+
+def device_update2(device):
+    user = st.session_state['loggedinuserid']
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('''SELECT `device_data`.`new_device`  FROM `device_data` WHERE `user` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1''',(user,))
+    row = cursor.fetchone()
+    olddev = row[0]
+    keys = list(device_dict.keys())
+    olddev2 = keys[olddev-1]
+    device2 = device_dict[device]
+    user = st.session_state['loggedinuserid']
+    date = datetime.today()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (old_device, new_device, user, updated) VALUES  (%s,%s,%s,%s) ''', (olddev,device2, user, date))
+    num_rows_updated = cursor.rowcount
+    if num_rows_updated:
+        st.success(f'Messgerät aktualisiert von {olddev2} zu {device}!"')
+    else:
+        st.info('Hat nicht geklappt!')
+    conn.commit()
+    conn.close()
+
 def meine_userdaten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-
-    cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
+    cursor.execute(f"""SELECT `user_data`.`id`,`user_data`.`username`,`user_data`.`vorname`,`user_data`.`nachname`, `user_data`.`register_date`,`user_data`.`birthdate`, `user_data`.`password`, `user_data`.`med`, `device_data`.`old_device`, `device_data`.`new_device`, `device_data`.`updated`  FROM `user_data` JOIN `device_data` ON `user_data`.`id` = `device_data`.`user` WHERE `user_data`.`id` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1""",(user,))
     rows = cursor.fetchall()
-
-    with st.container(border=True):
+    conn.commit()
+    conn.close()
+    with st.expander(label='User-Daten',expanded=False):
         st.subheader('Meine Profildaten')
         for row in rows:
-            id, username, first_name, last_name, register_date, birthdate, password, med = row
-            un = st.text_input(label='Username', value=username, key='uname')
-            vn = st.text_input(label='Vorname', value=first_name)
-            sn = st.text_input(label='Nachname', value=last_name)
-            bd = st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
-            medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1)
+            co1, co2, co3, co4 = st.columns(4)
+            id, username, first_name, last_name, register_date, birthdate, password, med, old_device, new_device, updated1 = row
+            with co1:
+                un = st.text_input(label='Username', value=username, key='uname')
+            with co2:
+                vn = st.text_input(label='Vorname', value=first_name)
+            with co3:
+                sn = st.text_input(label='Nachname', value=last_name)
+            with co4:
+                bd = st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
             st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')
-        namen_update = st.button(label='Namen ändern')
+    with st.expander(label='Medikament',expanded=False):   
+            medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1)
+    with st.expander(label='Messgerät',expanded=False):     
+            device = st.selectbox(label='Messgerät',options=device_dict,index=new_device-1)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
         username_update = st.button(label='Username ändern')
+    with col2:
+        namen_update = st.button(label='Namen ändern')
+    with col3:
         gebdat_update = st.button(label='Geburtsdatum ändern')
+    with col4:
         med_update = st.button(label='Medikament ändern')
-        st.button(label='Passwort ändern')
+    with col5:
+        dev_update = st.button(label='Messgerät ändern')
+    st.button(label='Passwort ändern')
 
-        if username_update:
-            username_check(un)
-            if st.session_state['usernameavailable'] == True:
-                update_username(user,un)
-        if namen_update:
-            name_update(id,vn,sn)
-        if gebdat_update:
-            birthdate_update(user,bd)
-        if med_update:
-            med_updater(user,medi)
+    if username_update:
+        username_check(un)
+        if st.session_state['usernameavailable'] == True:
+            update_username(user,un)
+    if namen_update:
+        name_update(id,vn,sn)
+    if gebdat_update:
+        birthdate_update(user,bd)
+    if med_update:
+        med_updater(user,medi)
+    if dev_update:
+        device_update2(device)
