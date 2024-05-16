@@ -66,7 +66,7 @@ def quick_eintrag(quick,date):
     conn.close()
 
     if rows != 0:
-        med2 = rows
+        med2 = rows[0]
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
         inr = quick_formula_calc_inr2(quick,current_isi)

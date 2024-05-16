@@ -253,9 +253,13 @@ def device_update2(device):
     cursor = conn.cursor()
     cursor.execute('''SELECT `device_data`.`new_device`  FROM `device_data` WHERE `user` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1''',(user,))
     row = cursor.fetchone()
-    olddev = row[0]
+    if row:
+        olddev = row[0]
+        olddev2 = keys[olddev-1]
+    else:
+        olddev = ''
+        olddev2 = 'kein vorheriges Gerät'
     keys = list(device_dict.keys())
-    olddev2 = keys[olddev-1]
     device2 = device_dict[device]
     user = st.session_state['loggedinuserid']
     date = datetime.today().date()
@@ -298,12 +302,12 @@ JOIN `lot_numbers` ON `lot_data`.`new_lot` = `lot_numbers`.`id`
 JOIN (
     SELECT `user`, MAX(`updated`) AS `max_updated`
     FROM `device_data`
-    WHERE `user` = 59
+    WHERE `user` = %s
     GROUP BY `user`
 ) AS `latest_device` ON `device_data`.`user` = `latest_device`.`user` AND `device_data`.`updated` = `latest_device`.`max_updated`
 WHERE `user_data`.`id` = %s
 ORDER BY `device_data`.`updated` DESC, `lot_data`.`updated` DESC
-LIMIT 1""",(user,))
+LIMIT 1""",(user,user,))
     rows = cursor.fetchall()
     conn.close()
     with st.expander(label='User-Daten',expanded=False):
