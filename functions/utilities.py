@@ -1,4 +1,6 @@
 import streamlit as st
+from functions.cnx import *
+import mysql.connector
 import hashlib
 from datetime import datetime as dt
 from datetime import timedelta as td
@@ -69,6 +71,10 @@ def quick_formula_calc_inr(quick,isi,refquick):
     inr = (quick/refquick)**isi
     return inr
 
+def quick_formula_calc_inr2(quick,isi):
+    inr = (quick/30)**isi
+    return inr
+
 def quick_formula_calc_quick(inr,isi,refquick):
     quick = (inr**(1/isi))*refquick
     return quick
@@ -79,3 +85,29 @@ def futuredate(date):
         return True
     else:
         return False
+    
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `freedb_inrdoc`.`drugs`')
+rows = cursor.fetchall()
+drugs_dict = {}
+for name, nr in rows:
+    drugs_dict[name] = nr
+conn.close()
+
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `device_name`,`device_nr` FROM `freedb_inrdoc`.`devices`')
+rows = cursor.fetchall()
+device_dict = {}
+for name, nr in rows:
+    device_dict[name] = nr
+conn.close()
+
+def mydevice(user):
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('SELECT `new_device` FROM `freedb_inrdoc`.`device_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1',(user,))
+    rows = cursor.fetchone()
+    return rows[0]
+    conn.close()

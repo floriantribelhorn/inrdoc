@@ -4,26 +4,6 @@ from functions.utilities import *
 from functions.cnx import *
 from datetime import datetime
 
-conn = mysql.connector.connect(**connex())
-cursor = conn.cursor()
-cursor.execute('SELECT `drug_name`,`drug_nr` FROM `freedb_inrdoc`.`drugs`')
-rows = cursor.fetchall()
-drugs_dict = {}
-for name, nr in rows:
-    drugs_dict[name] = nr
-conn.commit()
-conn.close()
-
-conn = mysql.connector.connect(**connex())
-cursor = conn.cursor()
-cursor.execute('SELECT `device_name`,`device_nr` FROM `freedb_inrdoc`.`devices`')
-rows = cursor.fetchall()
-device_dict = {}
-for name, nr in rows:
-    device_dict[name] = nr
-conn.commit()
-conn.close()
-
 def login(username,password):
     if empty_check2(username,password):
         user_einloggen(username,password)
@@ -56,16 +36,13 @@ def username_check(username):
     else:
         st.error('Dieser Username ist schon vergeben!')
         st.session_state['usernameavailable'] = False
-    
-    conn.commit()
     conn.close()
 
-def device_check(user):
+def lot_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `new_device` FROM `freedb_inrdoc`.`device_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
+    cursor.execute('SELECT `new_lot` FROM `freedb_inrdoc`.`lot_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
     rows = cursor.fetchone()
-    conn.commit()
     conn.close()
     if not rows:
         return False
@@ -103,7 +80,7 @@ def user_einloggen(username, password):
             st.session_state['loggedinuserid'] = userid
             if medi != '0':
                 st.session_state['medikament'] = True
-                if device_check(userid) == False:
+                if lot_check(userid) == False:
                     st.switch_page('pages/update.py')
                 else:
                     st.switch_page('main.py')
@@ -123,8 +100,6 @@ def user_data_check():
 
     for row in rows:
         st.table(row)
-
-    conn.commit()
     conn.close()
 
 def update_username(id, username):
@@ -222,15 +197,51 @@ def med_updater(user,medi):
     conn.commit()
     conn.close()
 
-def device_update(device):
+def lot_update1(lot):
     user = st.session_state['loggedinuserid']
-    date = datetime.today()
+    date = datetime.today().date()
+    time = datetime.now().time()
+    new_datetime = datetime.combine(date, time)
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (new_device, user, updated) VALUES  (%s,%s,%s) ''', (device, user, date))
+    cursor.execute('''SELECT `id` FROM `freedb_inrdoc`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
+    row = cursor.fetchone()
+    lot_id = row[0]
+    conn.close()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute(f'''INSERT INTO `freedb_inrdoc`.`lot_data` (new_lot, updated, user) VALUES  (%s,%s,%s) ''', (lot_id, new_datetime, user))
     num_rows_updated = cursor.rowcount
     if num_rows_updated:
-        st.success('Messgerät aktualisiert! Drücken Sie den Knopf "Weiterfahren"')
+        st.success('LOT EINGETRAGEN')
+    else:
+        st.info('Hat nicht geklappt!')
+    conn.commit()
+    conn.close()
+
+def lot_update2(lot):
+    user = st.session_state['loggedinuserid']
+    date = datetime.today().date()
+    time = datetime.now().time()
+    new_datetime = datetime.combine(date, time)
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('''SELECT `id` FROM `freedb_inrdoc`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
+    row = cursor.fetchone()
+    lot_id = row[0]
+    conn.close()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('''SELECT `new_lot` FROM `freedb_inrdoc`.`lot_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1''',(user,))
+    row = cursor.fetchone()
+    old_id = row[0]
+    conn.close()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute(f'''INSERT INTO `freedb_inrdoc`.`lot_data` (old_lot, new_lot, updated, user) VALUES  (%s,%s,%s,%s) ''', (old_id,lot_id, new_datetime, user))
+    num_rows_updated = cursor.rowcount
+    if num_rows_updated:
+        st.success('LOT aktualisiert')
     else:
         st.info('Hat nicht geklappt!')
     conn.commit()
@@ -247,10 +258,12 @@ def device_update2(device):
     olddev2 = keys[olddev-1]
     device2 = device_dict[device]
     user = st.session_state['loggedinuserid']
-    date = datetime.today()
+    date = datetime.today().date()
+    time = datetime.now().time()
+    new_datetime = datetime.combine(date, time)
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (old_device, new_device, user, updated) VALUES  (%s,%s,%s,%s) ''', (olddev,device2, user, date))
+    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (old_device, new_device, user, updated) VALUES  (%s,%s,%s,%s) ''', (olddev,device2, user, new_datetime))
     num_rows_updated = cursor.rowcount
     if num_rows_updated:
         st.success(f'Messgerät aktualisiert von {olddev2} zu {device}!"')
@@ -262,15 +275,42 @@ def device_update2(device):
 def meine_userdaten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute(f"""SELECT `user_data`.`id`,`user_data`.`username`,`user_data`.`vorname`,`user_data`.`nachname`, `user_data`.`register_date`,`user_data`.`birthdate`, `user_data`.`password`, `user_data`.`med`, `device_data`.`old_device`, `device_data`.`new_device`, `device_data`.`updated`  FROM `user_data` JOIN `device_data` ON `user_data`.`id` = `device_data`.`user` WHERE `user_data`.`id` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1""",(user,))
+    cursor.execute('SELECT `id`,`lotnr`,`device` FROM `freedb_inrdoc`.`lot_numbers`')
     rows = cursor.fetchall()
-    conn.commit()
+    dict1 = {}
+    dict2 = {}
+    dict3 = {}
+    for id, lot_nr, device in rows:
+        if device == 1:
+            dict1[id] = lot_nr
+        elif device == 2:
+            dict2[id] = lot_nr
+        else:
+            dict3[id] = lot_nr
+    conn.close()
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute(f"""SELECT `user_data`.`id`, `user_data`.`username`, `user_data`.`vorname`, `user_data`.`nachname`, `user_data`.`register_date`, `user_data`.`birthdate`, `user_data`.`password`, `user_data`.`med`, `device_data`.`old_device`, `device_data`.`new_device`, `device_data`.`updated`, `lot_data`.`new_lot`, `lot_data`.`updated`, `lot_numbers`.`device`
+FROM `user_data`
+JOIN `device_data` ON `user_data`.`id` = `device_data`.`user`
+JOIN `lot_data` ON `user_data`.`id` = `lot_data`.`user`
+JOIN `lot_numbers` ON `lot_data`.`new_lot` = `lot_numbers`.`id`
+JOIN (
+    SELECT `user`, MAX(`updated`) AS `max_updated`
+    FROM `device_data`
+    WHERE `user` = 59
+    GROUP BY `user`
+) AS `latest_device` ON `device_data`.`user` = `latest_device`.`user` AND `device_data`.`updated` = `latest_device`.`max_updated`
+WHERE `user_data`.`id` = %s
+ORDER BY `device_data`.`updated` DESC, `lot_data`.`updated` DESC
+LIMIT 1""",(user,))
+    rows = cursor.fetchall()
     conn.close()
     with st.expander(label='User-Daten',expanded=False):
         st.subheader('Meine Profildaten')
         for row in rows:
             co1, co2, co3, co4 = st.columns(4)
-            id, username, first_name, last_name, register_date, birthdate, password, med, old_device, new_device, updated1 = row
+            id, username, first_name, last_name, register_date, birthdate, password, med, old_device, new_device, updated1, new_lot, updated2, agreement = row
             with co1:
                 un = st.text_input(label='Username', value=username, key='uname')
             with co2:
@@ -282,10 +322,24 @@ def meine_userdaten(user):
             st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')
     with st.expander(label='Medikament',expanded=False):   
             medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1)
-    with st.expander(label='Messgerät',expanded=False):     
+    with st.expander(label='Messgerät + LOT-NR.',expanded=False):     
             device = st.selectbox(label='Messgerät',options=device_dict,index=new_device-1)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
+            if new_device == agreement:
+                if new_device == 1:
+                    lot = st.selectbox(label='aktuelle LOT-Nr.', options=list(dict1.values()),index=new_lot-1)
+                elif new_device == 2:
+                    lot = st.selectbox(label='aktuelle LOT-Nr.', options=list(dict2.values()),index=new_lot-4)
+                else:
+                    lot = st.selectbox(label='aktuelle LOT-Nr.', options=list(dict3.values()),index=new_lot-7)
+            else:
+                dicts = {
+                    1: dict1,
+                    2: dict2,
+                    3: dict3
+                }
+                dict4 = dicts[new_device]
+                lot = st.selectbox(label='bitte LOT-NR. zum passenden Gerät auswählen', options=list(dict4.values()))
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         username_update = st.button(label='Username ändern')
     with col2:
@@ -296,6 +350,8 @@ def meine_userdaten(user):
         med_update = st.button(label='Medikament ändern')
     with col5:
         dev_update = st.button(label='Messgerät ändern')
+    with col6:
+        lot_update = st.button(label='LOT-NR. aktualisieren')
     st.button(label='Passwort ändern')
 
     if username_update:
@@ -310,3 +366,5 @@ def meine_userdaten(user):
         med_updater(user,medi)
     if dev_update:
         device_update2(device)
+    if lot_update:
+        lot_update2(lot)

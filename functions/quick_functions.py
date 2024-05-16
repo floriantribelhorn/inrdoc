@@ -6,6 +6,7 @@ import mysql.connector
 import plotly.graph_objects as go
 import time
 from functions.cnx import *
+from functions.utilities import *
 
 def quick_data_check(user, dauer):
     conn = mysql.connector.connect(**connex())
@@ -40,7 +41,6 @@ def quick_empty(user, date):
     cursor = conn.cursor()
     cursor.execute(f'SELECT `datum` FROM `freedb_inrdoc`.`main_quick_data` WHERE datum = %s AND user = %s', (date,user,))
     rows = cursor.fetchall()
-    conn.commit()
     conn.close()
 
     if rows:
@@ -53,20 +53,27 @@ def quick_eintrag(quick,date):
     cursor = conn.cursor()
     id = st.session_state['loggedinuserid']
     cursor.execute(f'SELECT `med` FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (id,))
-    rows = cursor.fetchall()
-    med = rows[0][0]
-    conn.commit()
+    rows = cursor.fetchone()
     conn.close()
 
-    if rows[0][0] != 0:
-        med2 = rows[0][0]
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    id = st.session_state['loggedinuserid']
+    cursor.execute(f'SELECT `lot_data`.`new_lot`,`lot_numbers`.`isi`, `lot_data`.`id` FROM `freedb_inrdoc`.`lot_data` JOIN `lot_numbers` ON `lot_data`.`new_lot` = `lot_numbers`.`id` WHERE `user` = %s ORDER BY `lot_data`.`id` DESC LIMIT 1', (id,))
+    rows2 = cursor.fetchone()
+    current_lot = rows2[0]
+    current_isi = rows2[1]
+    conn.close()
+
+    if rows != 0:
+        med2 = rows
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
-        currentuserid = st.session_state['loggedinuserid']
+        inr = quick_formula_calc_inr2(quick,current_isi)
         cursor.execute(f"""
-            INSERT INTO `freedb_inrdoc`.`main_quick_data` (quick, datum, user, medi)
-            VALUES (%s,%s,%s,%s)
-            """, (quick,date,st.session_state['loggedinuserid'],med2))
+            INSERT INTO `freedb_inrdoc`.`main_quick_data` (quick, inr, datum, user, medi)
+            VALUES (%s,%s,%s,%s,%s)
+            """, (quick,inr,date,id,med2))
         conn.commit()
         conn.close()
 
@@ -108,8 +115,9 @@ def loeschen_eintraege(daten,user):
     conn.close()
 
 def jzaehlen(user):
-    alles = st.checkbox(label='Alles auswählen')
+    #alles = st.checkbox(label='Alles auswählen')
     conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
     sqlquery = f"""
     SELECT YEAR(`datum`) AS Year, COUNT(*) AS Count
     FROM `main_quick_data`
@@ -117,54 +125,58 @@ def jzaehlen(user):
     GROUP BY Year
     ORDER BY Year ASC;
     """
-    df = pd.read_sql(sqlquery, conn)
+    cursor.execute(sqlquery)
+    rows = cursor.fetchall()
 
-    # Anzahl Tabs = Anzahl Jahre in DF
-    num_tabs = len(df)
+    if rows:
+        df = pd.read_sql(sqlquery, conn)
 
-    # Tabs erstellen
-    tab_titles = [f'Jahr {year}' for year in df['Year'].tolist()[:num_tabs]]
-    tabs = st.tabs(tab_titles)
+        # Anzahl Tabs = Anzahl Jahre in DF
+        num_tabs = len(df)
 
-    # Checkboxes dem jeweiligen Tab hinzufügen
-    for i, year in enumerate(df['Year'].tolist()[:num_tabs]):
-        with tabs[i]:
-            conn = mysql.connector.connect(**connex())
-            sql_query = f"""
-            SELECT * FROM `main_quick_data` WHERE YEAR(datum) = {year} AND user = {user} ORDER BY `datum` ASC
-            """
-            df = pd.read_sql(sql_query, conn)
-            df = df.drop(columns=['id','user'])
-            df = df.sort_values('datum') 
-            df['quick'] = df['quick'].astype(float)  
-            df = df.sort_values(by=['datum', 'quick'],ascending=False) 
-            df['checkbox'] = df.index
+        # Tabs erstellen
+        tab_titles = [f'Jahr {year}' for year in df['Year'].tolist()[:num_tabs]]
+        tabs = st.tabs(tab_titles)
 
-            conn.commit()
-            conn.close()
+        # Checkboxes dem jeweiligen Tab hinzufügen
+        for i, year in enumerate(df['Year'].tolist()[:num_tabs]):
+            with tabs[i]:
+                conn = mysql.connector.connect(**connex())
+                sql_query = f"""
+                SELECT * FROM `main_quick_data` WHERE YEAR(datum) = {year} AND user = {user} ORDER BY `datum` ASC
+                """
+                df = pd.read_sql(sql_query, conn)
+                df = df.drop(columns=['id','user'])
+                df = df.sort_values('datum') 
+                df['quick'] = df['quick'].astype(float)  
+                df = df.sort_values(by=['datum', 'quick'],ascending=False) 
+                df['checkbox'] = df.index
 
-            num_checks = len(df)
-            num_cols = (num_checks // 25) + (num_checks % 25 > 0)
-            cols = st.columns(num_cols)
+                conn.commit()
+                conn.close()
 
-            with st.form(key=f'loeschen{i}'):
-                checked_boxes = {}
-                for i, row in df.iterrows():
-                    with cols[i % num_cols]:
-                        checked_boxes[row['datum']] = st.checkbox(label=f":blue[Datum]: {row['datum']} - :orange[Quick]: {row['quick']}", key=f'value_from_{row["datum"]}')
-                        if f'value_from_{row["datum"]}' not in st.session_state:
-                            st.session_state[f'value_from_{row["datum"]}'] = False
-                submit_button = st.form_submit_button(label='Einträge :red[LÖSCHEN]')
-                if submit_button:
-                        selected_dates = [date for date, checked in checked_boxes.items() if checked]
-                        for row in selected_dates:
-                            loeschen_eintraege(row,st.session_state['loggedinuserid'])
-                        else:
-                            st.rerun()
-                if alles:
-                    nichtgewählte = [key for key, checked in checked_boxes.items() if not checked]
-                    st.success(nichtgewählte)
-                    for state in nichtgewählte:
-                        st.session_state[f'{state}'] = True
-                        st.write(st.session_state[f'{state}'])
+                num_checks = len(df)
+                num_cols = (num_checks // 25) + (num_checks % 25 > 0)
+                cols = st.columns(num_cols)
+
+                with st.form(key=f'loeschen{i}'):
+                    checked_boxes = {}
+                    for i, row in df.iterrows():
+                        with cols[i % num_cols]:
+                            checked_boxes[row['datum']] = st.checkbox(label=f":blue[Datum]: {row['datum']} - :orange[Quick]: {row['quick']}", key=f'value_from_{row["datum"]}')
+                            if f'value_from_{row["datum"]}' not in st.session_state:
+                                st.session_state[f'value_from_{row["datum"]}'] = False
+                    submit_button = st.form_submit_button(label='Einträge :red[LÖSCHEN]')
+                    if submit_button:
+                            selected_dates = [date for date, checked in checked_boxes.items() if checked]
+                            for row in selected_dates:
+                                loeschen_eintraege(row,st.session_state['loggedinuserid'])
+                            else:
+                                st.rerun()
+                    #if alles:
+                    #   nichtgewählte = [key for key, checked in checked_boxes.items() if not checked]
+                    #  st.success(nichtgewählte)
+                    # for state in nichtgewählte:
+                        #    st.session_state[f'{state}'] = True
+                        #   st.write(st.session_state[f'{state}'])
                         
