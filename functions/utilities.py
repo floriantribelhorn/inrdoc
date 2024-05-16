@@ -41,6 +41,11 @@ def empty_check3(a,b,c,d,e,f,g):
         return True
     else:
         return False 
+
+def is_expired(expiry: str) -> bool:
+    expiry_date = dt.strptime(expiry, '%Y-%m-%d')
+    today = dt.today()
+    return expiry_date < today
     
 def proceed_login():
     st.session_state['einloggen'] = True
