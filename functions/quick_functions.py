@@ -26,14 +26,44 @@ def quick_data_check(user, dauer):
     cursor.execute('SELECT `vorname` FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (user,))
     rows = cursor.fetchall()
 
+    ref_line1_position = 70
+    ref_line2_position = 130
+
     fig.update_layout(
         xaxis=dict(title='Datum', tickformat='%Y-%m-%d'),
         yaxis=dict(title='Quick'),
         title=f'Quick Daten von {rows[0][0]} letzte {dauer} Dateneinträge',
+        shapes=[
+        # Add the first reference line
+        dict(
+            type='line',
+            x0=df['datum'].min(),
+            y0=ref_line1_position,
+            x1=df['datum'].max(),
+            y1=ref_line1_position,
+            line=dict(
+                color='red',
+                width=2,
+                dash='dash'
+            )
+        ),
+        # Add the second reference line
+        dict(
+            type='line',
+            x0=df['datum'].min(),
+            y0=ref_line2_position,
+            x1=df['datum'].max(),
+            y1=ref_line2_position,
+            line=dict(
+                color='red',
+                width=2,
+                dash='dash'
+            )
+        )
+        ]
     )
 
     st.plotly_chart(fig, use_container_width=False, sharing="streamlit", theme="streamlit")
-    conn.commit()
     conn.close()
 
 def quick_empty(user, date):
@@ -48,32 +78,29 @@ def quick_empty(user, date):
     else:
         return False
 
-def quick_eintrag(quick,date):
+def quick_eintrag(quick,inr,date):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     id = st.session_state['loggedinuserid']
     cursor.execute(f'SELECT `med` FROM `freedb_inrdoc`.`user_data` WHERE id = %s', (id,))
     rows = cursor.fetchone()
     conn.close()
-
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     id = st.session_state['loggedinuserid']
-    cursor.execute(f'SELECT `lot_data`.`new_lot`,`lot_numbers`.`isi`, `lot_data`.`id` FROM `freedb_inrdoc`.`lot_data` JOIN `lot_numbers` ON `lot_data`.`new_lot` = `lot_numbers`.`id` WHERE `user` = %s ORDER BY `lot_data`.`id` DESC LIMIT 1', (id,))
+    cursor.execute(f'SELECT `lot_data`.`new_lot`, `lot_data`.`id` FROM `freedb_inrdoc`.`lot_data` JOIN `lot_numbers` ON `lot_data`.`new_lot` = `lot_numbers`.`id` WHERE `user` = %s ORDER BY `lot_data`.`id` DESC LIMIT 1', (id,))
     rows2 = cursor.fetchone()
     current_lot = rows2[0]
-    current_isi = rows2[1]
     conn.close()
 
     if rows != 0:
         med2 = rows[0]
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
-        inr = quick_formula_calc_inr2(quick,current_isi)
         cursor.execute(f"""
-            INSERT INTO `freedb_inrdoc`.`main_quick_data` (quick, inr, datum, user, medi)
-            VALUES (%s,%s,%s,%s,%s)
-            """, (quick,inr,date,id,med2))
+            INSERT INTO `freedb_inrdoc`.`main_quick_data` (quick, inr, datum, user, medi, lot_nr)
+            VALUES (%s,%s,%s,%s,%s, %s)
+            """, (quick,inr,date,id,med2,current_lot))
         conn.commit()
         conn.close()
 

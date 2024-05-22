@@ -80,9 +80,9 @@ def quick_formula_calc_inr2(quick,isi):
     inr = (quick/30)**isi
     return inr
 
-def quick_formula_calc_quick(inr,isi,refquick):
-    quick = (inr**(1/isi))*refquick
-    return quick
+def quick_formula_calc_quick(quicksec,refquick):
+    quickproz = quicksec/refquick
+    return quickproz
 
 def futuredate(date):
     today = dt.today().date()

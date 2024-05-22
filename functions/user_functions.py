@@ -310,7 +310,7 @@ ORDER BY `device_data`.`updated` DESC, `lot_data`.`updated` DESC
 LIMIT 1""",(user,user,))
     rows = cursor.fetchall()
     conn.close()
-    with st.expander(label='User-Daten',expanded=False):
+    with st.expander(label='Meine Profildaten',expanded=False):
         st.subheader('Meine Profildaten')
         for row in rows:
             co1, co2, co3, co4 = st.columns(4)
@@ -324,10 +324,12 @@ LIMIT 1""",(user,user,))
             with co4:
                 bd = st.date_input(label='Geburtsdatum', format='DD/MM/YYYY', value=birthdate)
             st.write(f'Registriert am: {register_date.strftime("%d/%m/%Y")}')
-    with st.expander(label='Medikament',expanded=False):   
-            medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1)
-    with st.expander(label='Messgerät + LOT-NR.',expanded=False):     
-            device = st.selectbox(label='Messgerät',options=device_dict,index=new_device-1)
+    with st.expander(label='Medikament',expanded=False):
+            st.subheader('Mein Medikament')  
+            medi = st.selectbox(label='Medikament',options=drugs_dict,index=med-1,label_visibility='collapsed')
+    with st.expander(label='Messgerät + LOT-NR.',expanded=False):
+            st.subheader('Mein Messgerät und aktuelle LOT-Nr. des Reagenz')      
+            device = st.selectbox(label='device',options=device_dict,index=new_device-1,label_visibility='collapsed')
             if new_device == agreement:
                 if new_device == 1:
                     lot = st.selectbox(label='aktuelle LOT-Nr.', options=list(dict1.values()),index=new_lot-1)
