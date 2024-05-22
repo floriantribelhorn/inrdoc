@@ -11,10 +11,33 @@ if 'loginstatus' not in st.session_state:
 if 'medikament' not in st.session_state:
     st.session_state['medikament'] = False
 
+if 'heutigerquicksec' not in st.session_state:
+    st.session_state['heutigerquicksec'] = 0
+
 st.session_state['aktuell'] = 'Dateneingabe'
 
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
+
+def callback_calcfromsec():
+    # Update the quickproz and inr variables based on the new value of quicksec
+    global heutigerquickproz, inr
+    heutigerquicksec = st.session_state['heutigerquicksec']
+    heutigerquickproz = (st.session_state['current_ref']/heutigerquicksec)*100
+    inr = (heutigerquicksec/st.session_state['current_ref'])**st.session_state['current_isi']
+    # Update the value of the quickproz and inr inputs
+    st.session_state.heutigerquickproz = heutigerquickproz
+    st.session_state.heutigerinr = inr
+
+def callback_calc2frominr():
+    # Update the quickproz and inr variables based on the new value of quicksec
+    global heutigerquickproz, heutigerquicksec
+    inr = st.session_state['heutigerinr']
+    heutigerquicksec = st.session_state['current_ref']*(inr)**(1/st.session_state['current_isi'])
+    heutigerquickproz = (st.session_state['current_ref']/heutigerquicksec)*100
+    # Update the value of the quickproz and inr inputs
+    st.session_state.heutigerquickproz = heutigerquickproz
+    st.session_state.heutigerquicksec = heutigerquicksec
 
 if st.session_state['loginstatus'] != False:
     if st.session_state['medikament'] == True:
@@ -32,10 +55,16 @@ if st.session_state['loginstatus'] != False:
         user = st.session_state['loggedinuserid']
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
-        cursor.execute(f'SELECT `lot_numbers`.`lotnr`,`lot_numbers`.`expiry` FROM `freedb_inrdoc`.`lot_numbers` JOIN `lot_data` ON `lot_data`.`new_lot` = `lot_numbers`.`id` WHERE `lot_data`.`user` = %s ORDER BY `lot_data`.`updated` DESC LIMIT 1',(user,))
+        cursor.execute(f'SELECT `lot_numbers`.`lotnr`,`lot_numbers`.`expiry`,`lot_numbers`.`refquick`,`lot_numbers`.`isi` FROM `freedb_inrdoc`.`lot_numbers` JOIN `lot_data` ON `lot_data`.`new_lot` = `lot_numbers`.`id` WHERE `lot_data`.`user` = %s ORDER BY `lot_data`.`updated` DESC LIMIT 1',(user,))
         rows = cursor.fetchone()
         current_lot = rows[0]
         expiry = rows[1]
+        current_ref = rows[2]
+        current_isi = rows[3]
+        if 'current_ref' not in st.session_state:
+                    st.session_state['current_ref'] = current_ref
+        if 'current_isi' not in st.session_state:
+                    st.session_state['current_isi'] = current_isi
         conn.close()
         if is_expired(str(expiry)):
             st.warning('Ihre aktuelles Reagenz hat das Verfalldatum überschritten!')
@@ -46,13 +75,15 @@ if st.session_state['loginstatus'] != False:
                 st.text(current_lot)
             with st.expander(label='Dateneingabe',expanded=False):
                 st.subheader('Quick-Eingabe')
-                heutigerquick = st.number_input(label = "Quick-Messwert", min_value=0, max_value=130, step=1)
+                heutigerquicksec = st.number_input(label = "Quick-Messwert in Sekunden", min_value=0, max_value=100, key='heutigerquicksec', step=1,on_change=callback_calcfromsec)
+                heutigerquickproz = st.number_input(label = "Quick-Messwert in Prozent", key='heutigerquickproz', min_value=0.0, max_value=130.0, step=0.1)
+                inr = st.number_input(label = "errechneter INR", min_value=0.0, key='heutigerinr', max_value=20.0, step=0.1, on_change=callback_calc2frominr)
                 datum = st.date_input('Zeitpunkt der Messung',format='DD/MM/YYYY')
                 abspeichern = st.button('Quick jetzt abspeichern')
                 if abspeichern:
                     if futuredate(datum) == False:
                         if not quick_empty(st.session_state['loggedinuserid'],datum):
-                            quick_eintrag(heutigerquick,datum)
+                            quick_eintrag(heutigerquickproz,inr,datum)
                         else:
                             datum1 = datum.strftime('%d-%m-%Y')
                             st.info(f"Am {datum1} existiert bereits eine eingetragene Messung.")
