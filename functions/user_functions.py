@@ -341,7 +341,7 @@ def device_update2(device):
     else:
         olddev = ''
         olddev2 = 'kein vorheriges Gerät'
-    for v, k in device_dict.items():
+    for k, v in device_dict.items():
         if v == device:
             device2 = k
         else:
