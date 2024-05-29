@@ -21,7 +21,8 @@ if not rows:
             dev = st.selectbox(label='Messgerät',options=list(device_dict.keys()),placeholder='Wählen Sie Ihr Messgerät aus!')
             btn = st.button(label='Abspeichern')
             if btn:
-                device_update2(dev)
+                device = device_dict[dev]
+                device_update2(device)
 else:
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
