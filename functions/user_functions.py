@@ -331,6 +331,8 @@ def device_update2(device):
     for v, k in device_dict.items():
         if k == device:
             device2 = v
+        else:
+            continue
     date = datetime.today().date()
     time1 = datetime.now().time()
     new_datetime = datetime.combine(date, time1)
