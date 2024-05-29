@@ -3,6 +3,25 @@ import mysql.connector
 from functions.utilities import *
 from functions.cnx import *
 from datetime import datetime
+import time
+
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
+rows = cursor.fetchall()
+drugs_dict = {}
+for name, nr in rows:
+    drugs_dict[name] = nr
+conn.close()
+
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `device_name`,`device_nr` FROM `sql7710143`.`devices`')
+rows = cursor.fetchall()
+device_dict = {}
+for name, nr in rows:
+    device_dict[name] = nr
+conn.close()
 
 def login(username,password):
     if empty_check2(username,password):
@@ -28,7 +47,7 @@ def username_check(username):
     
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `username` FROM `freedb_inrdoc`.`user_data` WHERE username = %s',(username,))
+    cursor.execute('SELECT `username` FROM `sql7710143`.`user_data` WHERE username = %s',(username,))
     rows = cursor.fetchall()
     
     if not rows:
@@ -41,7 +60,18 @@ def username_check(username):
 def lot_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `new_lot` FROM `freedb_inrdoc`.`lot_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
+    cursor.execute('SELECT `new_lot` FROM `sql7710143`.`lot_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
+    rows = cursor.fetchone()
+    conn.close()
+    if not rows:
+        return False
+    else:
+        return rows[0]
+
+def level_check(user):
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('SELECT `lower`,`upper` FROM `sql7710143`.`targetlevel` WHERE user = %s',(user,))
     rows = cursor.fetchone()
     conn.close()
     if not rows:
@@ -56,7 +86,7 @@ def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,me
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO `freedb_inrdoc`.`user_data` (username, password, vorname, nachname, register_date, birthdate, med)
+        INSERT INTO `sql7710143`.`user_data` (username, password, vorname, nachname, register_date, birthdate, med)
         VALUES (%s,%s,%s,%s,%s,%s,%s)
         """, (username, passwordcheck, vorname, nachname, registerdate, geburtsdatum,med))
     conn.commit()
@@ -68,13 +98,12 @@ def user_einloggen(username, password):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
 
-    cursor.execute('SELECT `id`,`username`, `password`,`vorname`, `med` FROM `freedb_inrdoc`.`user_data` WHERE username = %s', (username,))
+    cursor.execute('SELECT `id`,`username`, `password`,`vorname`, `med` FROM `sql7710143`.`user_data` WHERE username = %s', (username,))
     rows = cursor.fetchall()
 
     if len(rows) == 1:
         userid, uname, pw1, vname, medi = rows[0]
         if uname == username and pw1 == pw:
-            st.success('eingeloggt',icon='🔒')
             st.session_state['loginstatus'] = True
             st.session_state['loggedinuser'] = vname
             st.session_state['loggedinuserid'] = userid
@@ -82,7 +111,10 @@ def user_einloggen(username, password):
                 st.session_state['medikament'] = True
                 if lot_check(userid) == False:
                     st.switch_page('pages/update.py')
+                elif level_check(userid) == False:
+                    st.switch_page('pages/update.py')
                 else:
+                    st.success('eingeloggt',icon='🔒')
                     st.switch_page('main.py')
         elif uname == username and pw1 != pw:
             st.warning('falsches Passwort', icon="⚠️")    
@@ -95,7 +127,7 @@ def user_einloggen(username, password):
 def user_data_check():
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM `freedb_inrdoc`.`user_data`')
+    cursor.execute('SELECT * FROM `sql7710143`.`user_data`')
     rows = cursor.fetchall()
 
     for row in rows:
@@ -105,18 +137,15 @@ def user_data_check():
 def update_username(id, username):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `username` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
+    cursor.execute('SELECT `username` FROM `sql7710143`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
-    if 'changedname' not in st.session_state:
-        st.session_state['changedname'] = False
-        st.session_state['changedname'] = rows[0][0]
+    cn = rows[0][0]
     conn.commit()
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `username` = %s WHERE `id` = %s', (username, id,))
+    cursor.execute('UPDATE `sql7710143`.`user_data` SET `username` = %s WHERE `id` = %s', (username, id,))
     num_rows_updated = cursor.rowcount
-    cn = st.session_state['changedname']
     if num_rows_updated != '':
         st.success(f'Username von {cn} zu {username} geändert.')
     conn.commit()
@@ -125,7 +154,7 @@ def update_username(id, username):
 def name_update(id,vorname,nachname):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `vorname`,`nachname` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
+    cursor.execute('SELECT `vorname`,`nachname` FROM `sql7710143`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
     vorname1 = rows[0][0]
     nachname1 = rows[0][1]
@@ -133,7 +162,7 @@ def name_update(id,vorname,nachname):
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `vorname` = %s,`nachname` = %s WHERE `id` = %s', (vorname,nachname, id,))
+    cursor.execute('UPDATE `sql7710143`.`user_data` SET `vorname` = %s,`nachname` = %s WHERE `id` = %s', (vorname,nachname, id,))
     num_rows_updated = cursor.rowcount
     if num_rows_updated != '':
         if vorname1 == vorname and nachname1 == nachname:
@@ -147,18 +176,19 @@ def name_update(id,vorname,nachname):
             st.info(f'Vorname von {vorname1} zu {vorname} und Nachname von {nachname1} zu {nachname} geändert.')
     conn.commit()
     conn.close()
+    st.session_state['loggedinuser'] = vorname
 
 def birthdate_update(id,bd):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `birthdate` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (id,))
+    cursor.execute('SELECT `birthdate` FROM `sql7710143`.`user_data` WHERE `id` = %s', (id,))
     rows = cursor.fetchall()
     altbd = rows[0][0]
     conn.commit()
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `birthdate` = %s WHERE `id` = %s', (bd, id,))
+    cursor.execute('UPDATE `sql7710143`.`user_data` SET `birthdate` = %s WHERE `id` = %s', (bd, id,))
     num_rows_updated = cursor.rowcount
     if num_rows_updated != '':
         st.info(f'Altes Geburtsdatum: {altbd}, neues Geburtsdatum: {bd}')
@@ -170,7 +200,7 @@ def birthdate_update(id,bd):
 def med_updater(user,medi):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `med` FROM `freedb_inrdoc`.`user_data` WHERE `id` = %s', (user,))
+    cursor.execute('SELECT `med` FROM `sql7710143`.`user_data` WHERE `id` = %s', (user,))
     rows = cursor.fetchall()
     altmed = rows[0][0]
     for key, value in drugs_dict.items():
@@ -188,7 +218,7 @@ def med_updater(user,medi):
         um = 0
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('UPDATE `freedb_inrdoc`.`user_data` SET `med` = %s WHERE `id` = %s', (um, user,))
+    cursor.execute('UPDATE `sql7710143`.`user_data` SET `med` = %s WHERE `id` = %s', (um, user,))
     num_rows_updated = cursor.rowcount
     if num_rows_updated != '':
         st.info(f'Altes Medikament: {altmed}, neues Medikament: {medi}')
@@ -204,16 +234,17 @@ def lot_update1(lot):
     new_datetime = datetime.combine(date, time)
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''SELECT `id` FROM `freedb_inrdoc`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
-    row = cursor.fetchone()
-    lot_id = row[0]
+    cursor.execute('''SELECT `id`,`lotnr` FROM `sql7710143`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
+    row = cursor.fetchall()
+    lot_id = row[0][0]
+    lot_name = row[0][1]
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute(f'''INSERT INTO `freedb_inrdoc`.`lot_data` (new_lot, updated, user) VALUES  (%s,%s,%s) ''', (lot_id, new_datetime, user))
+    cursor.execute(f'''INSERT INTO `sql7710143`.`lot_data` (new_lot, updated, user) VALUES  (%s,%s,%s) ''', (lot_id, new_datetime, user))
     num_rows_updated = cursor.rowcount
     if num_rows_updated:
-        st.success('LOT EINGETRAGEN')
+        st.success(f'LOT-Nr. {lot_name} EINGETRAGEN')
     else:
         st.info('Hat nicht geklappt!')
     conn.commit()
@@ -226,68 +257,110 @@ def lot_update2(lot):
     new_datetime = datetime.combine(date, time)
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''SELECT `id` FROM `freedb_inrdoc`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
-    row = cursor.fetchone()
-    lot_id = row[0]
+    cursor.execute('''SELECT `id`,`lotnr` FROM `sql7710143`.`lot_numbers` WHERE `lotnr` = %s ''',(lot,))
+    row = cursor.fetchall()
+    lot_id = row[0][0]
+    lot_name = row[0][1]
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''SELECT `new_lot` FROM `freedb_inrdoc`.`lot_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1''',(user,))
+    cursor.execute('''SELECT `new_lot` FROM `sql7710143`.`lot_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1''',(user,))
     row = cursor.fetchone()
     old_id = row[0]
     conn.close()
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute(f'''INSERT INTO `freedb_inrdoc`.`lot_data` (old_lot, new_lot, updated, user) VALUES  (%s,%s,%s,%s) ''', (old_id,lot_id, new_datetime, user))
+    cursor.execute(f'''INSERT INTO `sql7710143`.`lot_data` (old_lot, new_lot, updated, user) VALUES  (%s,%s,%s,%s) ''', (old_id,lot_id, new_datetime, user))
     num_rows_updated = cursor.rowcount
     if num_rows_updated:
-        st.success('LOT aktualisiert')
+        st.success(f'LOT-NR. {lot_name} aktualisiert')
     else:
         st.info('Hat nicht geklappt!')
     conn.commit()
     conn.close()
 
+def level_update(upper,lower):
+    user = st.session_state['loggedinuserid']
+    if upper > lower:
+        conn = mysql.connector.connect(**connex())
+        cursor = conn.cursor()
+        cursor.execute(f'''INSERT INTO `sql7710143`.`targetlevel` (user, lower, upper) VALUES  (%s,%s,%s) ''', (user,lower,upper,))
+        num_rows_updated = cursor.rowcount
+        conn.commit()
+        conn.close()
+        if num_rows_updated:
+            st.success('Zielwerte INR wurden eingetragen!')
+            st.success('eingeloggt',icon='🔒')
+            time.sleep(2)
+            st.switch_page('main.py')
+        else:
+            st.warning('Hat nicht geklappt!, zurück zur Startseite!')
+            st.session_state['loginstatus'] = False
+            st.session_state['loggedinuser'] = ''
+            st.session_state['loggedinuserid'] = ''
+            time.sleep(2)
+            st.switch_page('main.py')
+    elif upper == lower:
+        st.warning('Zielwerte sind identisch!, zurück zur Startseite!')
+        st.session_state['loginstatus'] = False
+        st.session_state['loggedinuser'] = ''
+        st.session_state['loggedinuserid'] = ''
+        time.sleep(2)
+        st.switch_page('main.py')
+    else:
+        st.warning('Oberer Zielwert ist kleiner als unterer!, zurück zur Startseite!')
+        st.session_state['loginstatus'] = False
+        st.session_state['loggedinuser'] = ''
+        st.session_state['loggedinuserid'] = ''
+        time.sleep(2)
+        st.switch_page('main.py')
+
 def device_update2(device):
     user = st.session_state['loggedinuserid']
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''SELECT `device_data`.`new_device`  FROM `device_data` WHERE `user` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1''',(user,))
+    cursor.execute('''SELECT `device_data`.`new_device` FROM `device_data` WHERE `user` = %s ORDER BY `device_data`.`updated` DESC LIMIT 1''',(user,))
     row = cursor.fetchone()
+    keys = list(device_dict.keys())
     if row:
         olddev = row[0]
         olddev2 = keys[olddev-1]
     else:
         olddev = ''
         olddev2 = 'kein vorheriges Gerät'
-    keys = list(device_dict.keys())
-    device2 = device_dict[device]
-    user = st.session_state['loggedinuserid']
+    for v, k in device_dict.items():
+        if k == device:
+            device2 = v
     date = datetime.today().date()
-    time = datetime.now().time()
-    new_datetime = datetime.combine(date, time)
+    time1 = datetime.now().time()
+    new_datetime = datetime.combine(date, time1)
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('''INSERT INTO `freedb_inrdoc`.`device_data`  (old_device, new_device, user, updated) VALUES  (%s,%s,%s,%s) ''', (olddev,device2, user, new_datetime))
+    cursor.execute('''INSERT INTO `sql7710143`.`device_data`  (old_device, new_device, user, updated) VALUES  (%s,%s,%s,%s) ''', (olddev,device, user, new_datetime))
     num_rows_updated = cursor.rowcount
     if num_rows_updated:
-        st.success(f'Messgerät aktualisiert von {olddev2} zu {device}!"')
+        st.success(f'Messgerät aktualisiert von {olddev2} zu {device2}!"')
+        conn.commit()
+        conn.close()
+        time.sleep(2)
+        st.switch_page('pages/update.py')
     else:
-        st.info('Hat nicht geklappt!')
-    conn.commit()
-    conn.close()
+        st.warning('Hat nicht geklappt!')
+        conn.close()
+    
 
 def meine_userdaten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `id`,`lotnr`,`device` FROM `freedb_inrdoc`.`lot_numbers`')
+    cursor.execute('SELECT `id`,`lotnr`,`device` FROM `sql7710143`.`lot_numbers`')
     rows = cursor.fetchall()
     dict1 = {}
     dict2 = {}
     dict3 = {}
-    for id, lot_nr, device in rows:
-        if device == 1:
+    for id, lot_nr, dev in rows:
+        if dev == 1:
             dict1[id] = lot_nr
-        elif device == 2:
+        elif dev == 2:
             dict2[id] = lot_nr
         else:
             dict3[id] = lot_nr
@@ -358,19 +431,29 @@ LIMIT 1""",(user,user,))
         dev_update = st.button(label='Messgerät ändern')
     with col6:
         lot_update = st.button(label='LOT-NR. aktualisieren')
-    st.button(label='Passwort ändern')
 
     if username_update:
         username_check(un)
         if st.session_state['usernameavailable'] == True:
             update_username(user,un)
+            time.sleep(5)
+            st.switch_page('pages/sign_up.py')
     if namen_update:
         name_update(id,vn,sn)
+        time.sleep(5)
+        st.switch_page('pages/sign_up.py')
     if gebdat_update:
         birthdate_update(user,bd)
+        time.sleep(5)
+        st.switch_page('pages/sign_up.py')
     if med_update:
         med_updater(user,medi)
+        time.sleep(5)
+        st.switch_page('pages/sign_up.py')
     if dev_update:
-        device_update2(device)
+        deviceid = device_dict[device]
+        device_update2(deviceid)
     if lot_update:
         lot_update2(lot)
+        time.sleep(5)
+        st.switch_page('pages/sign_up.py')   

@@ -5,10 +5,10 @@ import hashlib
 from datetime import datetime as dt
 from datetime import timedelta as td
 
-def main(logstate):
+def main(log):
     st.set_page_config(page_title='INR Dokumentation', page_icon="🏠", layout="wide", initial_sidebar_state="expanded")
     
-    if logstate == True:
+    if log == True:
         st.sidebar.title("Navigation")
         st.sidebar.page_link("main.py", label="Startseite", icon = "🏠")
         st.sidebar.page_link("pages/sign_up.py", label="Login/Registration", icon = "🔒")
@@ -93,7 +93,7 @@ def futuredate(date):
     
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
-cursor.execute('SELECT `drug_name`,`drug_nr` FROM `freedb_inrdoc`.`drugs`')
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
 rows = cursor.fetchall()
 drugs_dict = {}
 for name, nr in rows:
@@ -102,7 +102,7 @@ conn.close()
 
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
-cursor.execute('SELECT `device_name`,`device_nr` FROM `freedb_inrdoc`.`devices`')
+cursor.execute('SELECT `device_name`,`device_nr` FROM `sql7710143`.`devices`')
 rows = cursor.fetchall()
 device_dict = {}
 for name, nr in rows:
@@ -112,7 +112,8 @@ conn.close()
 def mydevice(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
-    cursor.execute('SELECT `new_device` FROM `freedb_inrdoc`.`device_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1',(user,))
+    cursor.execute('SELECT `new_device` FROM `sql7710143`.`device_data` WHERE `user` = %s ORDER BY `updated` DESC LIMIT 1',(user,))
     rows = cursor.fetchone()
-    return rows[0]
     conn.close()
+    return rows[0]
+    
