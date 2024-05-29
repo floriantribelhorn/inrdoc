@@ -330,7 +330,7 @@ def device_update2(device):
         olddev2 = 'kein vorheriges Gerät'
     for v, k in device_dict.items():
         if v == device:
-            device2 = v
+            device2 = k
         else:
             continue
     date = datetime.today().date()
