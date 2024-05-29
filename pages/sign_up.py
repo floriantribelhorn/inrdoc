@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
-cursor.execute('SELECT `drug_name`,`drug_nr` FROM `freedb_inrdoc`.`drugs`')
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
 rows = cursor.fetchall()
 drugs_dict = {}
 for name, nr in rows:
@@ -56,7 +56,7 @@ if st.session_state['loginstatus'] == False:
             login_password = st.text_input(label='Passwort ', type='password')
             st.form_submit_button(on_click=login(login_username,login_password),label='Einloggen')
     elif st.session_state['registrieren'] == True:
-         with st.sidebar.form(key='register',clear_on_submit=True,border=True):
+         with st.sidebar.form(key='register',clear_on_submit=False,border=True):
             st.subheader('Registrierung')
             username = st.text_input(label='Username', key='username')
             vorname = st.text_input(label='Vorname', key='vorname')
@@ -70,3 +70,4 @@ if st.session_state['loginstatus'] == False:
             st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,pass_repeat,geburtsdatum,registerdate,mednr))
 else:
     meine_userdaten(st.session_state['loggedinuserid'])
+    inr_bereich(st.session_state['loggedinuserid'])
