@@ -57,6 +57,17 @@ def username_check(username):
         st.session_state['usernameavailable'] = False
     conn.close()
 
+def dev_check(user):
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
+    cursor.execute('SELECT `new_device` FROM `sql7710143`.`device_data` WHERE user = %s ORDER BY updated DESC LIMIT 1',(user,))
+    rows = cursor.fetchone()
+    conn.close()
+    if not rows:
+        return False
+    else:
+        return rows[0]
+
 def lot_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -112,6 +123,8 @@ def user_einloggen(username, password):
                 if lot_check(userid) == False:
                     st.switch_page('pages/update.py')
                 elif level_check(userid) == False:
+                    st.switch_page('pages/update.py')
+                elif dev_check(userid) == False:
                     st.switch_page('pages/update.py')
                 else:
                     st.success('eingeloggt',icon='🔒')
