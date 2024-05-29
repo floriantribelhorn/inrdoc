@@ -37,7 +37,7 @@ if __name__ == '__main__':
         \text{INR} = \left(\frac{\text{TPZ(Patient [sec])}}{\text{TPZ(Referenz/Normalplasma [sec])}}\right)^{\text{ISI}}
         \end{equation*}''')
         st.latex(r'''\begin{equation*}
-        \text{Quick in \%} = \left(\frac{\text{TPZ(Patient [sec])}}{\text{TPZ(Referenz/Normalplasma [sec])}}\right)
+        \text{Quick in \%} = \left(\frac{\text{TPZ(Referenz/Normalplasma [sec])}}{\text{TPZ(Patient [sec])}}*100\right)
         \end{equation*}''')
         st.latex(r'''\text{ISI} = \text{International Sensitivity Index: Reagenz-abhängig}''')
         st.latex(r'''\text{INR} = \text{International Normalized Ratio}''')
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         st.markdown('Die INR verhält sich zum Quick-Wert umgekehrt proportional: -Mit abnehmendem Quick-Wert wird die INR größer -Mit zunehmendem Quick-Wert wird die INR kleiner Normwertig ist eine INR von 0,85 bis 1,15. Eine INR von 1,0 entspricht dabei einem Quick-Wert von 100%. Therapeutische INR-Werte bei medikamentöser Antikoagulation liegen in der Regel zwischen 2,0 und 3,5.')
         st.header('5. Verwendung')
         st.markdown('Die INR wird hauptsächlich zur Steuerung und Verlaufskontrolle einer Antikoagulation mit Vitamin-K-Antagonisten (Phenprocoumon, Warfarin) eingesetzt. Die INR wird hierbei in der Einstellungsphase täglich, nach erfolgter Einstellung - abhängig von Patienteneigenschaften wie Compliance und Stabilität der Antikoagulation - einmal wöchentlich bis einmal monatlich kontrolliert. Die Überprüfung einer INR kann mithilfe von Systemen wie Coagu Check® durch den Patienten selbst erfolgen, ähnlich einer Blutzuckermessung.')
-        st.image('docs/Screenshot 2024-04-25 205644.png', caption='Tabelle')
+        st.image('pages/Screenshot 2024-04-25 205644.png', caption='Tabelle')
         st.header('6. Bewertung')
         st.markdown('Der INR wird vor allem im "steady state" einer Antikoagulation mit Vitamin-K-Antagonisten verwendet, da beim Monitoring dieser Patienten Probleme mit der Vergleichbarkeit der Quick-Werte auftraten. Teilweise geben Labore eine INR deshalb nur an, wenn der Quick-Wert vermindert ist. Diese ursprüngliche Definition wird aber immer weniger beachtet. Es ist kein Fehler, z.B. bei Patienten mit Leberversagen weiterhin einen Quick-Wert anzugeben. Bei der aktivierten partiellen Thromboplastinzeit (aPTT) sind die Ergebnisse zwischen unterschiedlichen Laboren ebenfalls nicht ohne Weiteres vergleichbar, hier waren die Standardisierungsbemühungen aber bisher weniger erfolgreich.')
         st.text('Quelle: DocCheck-Flexikon')
