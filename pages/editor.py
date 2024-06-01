@@ -17,6 +17,6 @@ if __name__ == '__main__':
     if st.session_state['loginstatus'] != False:
         with st.container(border=True):
             st.title('Meine Quick-Daten')
-            jzaehlen(st.session_state['loggedinuserid'])
+            quick_daten(st.session_state['loggedinuserid'])
     else:
         st.switch_page('main.py')
