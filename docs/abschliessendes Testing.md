@@ -14,3 +14,4 @@
 2. Administrator hinzufügen: Verwaltung aktueller/neuer LOT-Daten, nicht mehr genutzte Profile löschen, Daten für Studienzwecke verwalten
 3. Erinnerungsfunktion für Patienten
 4. automatisches E-Mail an behandelnden Arzt für Sprechstunde
+5. momentan alles noch fiktive LOT-Daten der jeweiligen Messgeräte -> Hersteller kontaktieren, ob ggf. Daten erhältlich wären, um echte Daten zu generieren.
