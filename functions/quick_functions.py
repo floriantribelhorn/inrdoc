@@ -8,6 +8,7 @@ import time
 from functions.cnx import *
 from functions.utilities import *
 import math
+from datetime import datetime
 
 def quick_data_check(user, dauer):
     conn = mysql.connector.connect(**connex())
@@ -111,13 +112,12 @@ def quick_eintrag(quick,inr,date):
         conn.commit()
         conn.close()
 
-        progress_text = "Quick wird gespeichert"
+        progress_text = "Quick wird gespeichert, bitte warten bis Meldung in grün erscheint!"
         my_bar = st.progress(0, text=progress_text)
 
-        for percent_complete in range(50):
+        for percent_complete in range(100):
             time.sleep(0.01)
             my_bar.progress(percent_complete + 1, text=progress_text)
-        time.sleep(1)
         my_bar.empty()
 
         conn = mysql.connector.connect(**connex())
@@ -178,16 +178,15 @@ def loeschen_eintraege(daten,user):
     conn.commit()
     conn.close()
 
-def jzaehlen(user):
-    #alles = st.checkbox(label='Alles auswählen')
+def quick_daten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     sqlquery = f"""
-    SELECT YEAR(`datum`) AS Year, COUNT(*) AS Count
+    SELECT YEAR(`datum`) AS Year, MONTH(`datum`) AS Month, COUNT(*) AS Count
     FROM `main_quick_data`
     WHERE user = {user}
-    GROUP BY Year
-    ORDER BY Year ASC;
+    GROUP BY Year, Month
+    ORDER BY Year ASC, Month ASC;
     """
     cursor.execute(sqlquery)
     rows = cursor.fetchall()
@@ -196,54 +195,56 @@ def jzaehlen(user):
         df = pd.read_sql(sqlquery, conn)
 
         # Anzahl Tabs = Anzahl Jahre in DF
-        num_tabs = len(df)
+        num_tabs = len(df['Year'].unique())
 
         # Tabs erstellen
-        tab_titles = [f'Jahr {year}' for year in df['Year'].tolist()[:num_tabs]]
+        tab_titles = [f'Jahr {year}' for year in df['Year'].unique()]
         tabs = st.tabs(tab_titles)
 
-        # Checkboxes dem jeweiligen Tab hinzufügen
-        for i, year in enumerate(df['Year'].tolist()[:num_tabs]):
+        for i, year in enumerate(df['Year'].unique()):
             with tabs[i]:
-                conn = mysql.connector.connect(**connex())
-                sql_query = f"""
-                SELECT * FROM `main_quick_data` WHERE YEAR(datum) = {year} AND user = {user} ORDER BY `datum` ASC
-                """
-                df = pd.read_sql(sql_query, conn)
-                df = df.drop(columns=['id','user'])
-                df = df.sort_values('datum') 
-                df['quick'] = df['quick'].astype(float)  
-                df = df.sort_values(by=['datum', 'quick'],ascending=False) 
-                df['checkbox'] = df.index
+                # Subtabs für jeden Monat erstellen
+                subtab_titles = [f'Monat {month}' for month in df[df['Year'] == year]['Month'].unique()]
+                subtabs = st.tabs(subtab_titles)
 
-                conn.commit()
-                conn.close()
+                for j, month in enumerate(df[df['Year'] == year]['Month'].unique()):
+                    with subtabs[j]:
+                        conn = mysql.connector.connect(**connex())
+                        sql_query = f"""
+                        SELECT * FROM `main_quick_data` 
+                        WHERE YEAR(datum) = {year} AND MONTH(datum) = {month} AND user = {user} 
+                        ORDER BY `datum` ASC
+                        """
+                        df_month = pd.read_sql(sql_query, conn)
+                        df_month = df_month.drop(columns=['id','user'])
+                        df_month = df_month.sort_values('datum') 
+                        df_month['quick'] = df_month['quick'].astype(float)  
+                        df_month = df_month.sort_values(by=['datum', 'quick'],ascending=False) 
+                        df_month['checkbox'] = df_month.index
 
-                num_checks = len(df)
-                num_cols = (num_checks // 25) + (num_checks % 25 > 0)
-                cols = st.columns(num_cols)
+                        conn.commit()
+                        conn.close()
 
-                with st.form(key=f'loeschen{i}'):
-                    checked_boxes = {}
-                    for i, row in df.iterrows():
-                        with cols[i % num_cols]:
-                            int_part = math.floor(row['quick'])
-                            num_dig = len(str(int_part))
-                            gerundeterquick = round(row['quick'],num_dig) 
-                            checked_boxes[row['datum']] = st.checkbox(label=f":blue[Datum]: {row['datum']} - :orange[Quick]: {gerundeterquick}", key=f'value_from_{row["datum"]}')
-                            if f'value_from_{row["datum"]}' not in st.session_state:
-                                st.session_state[f'value_from_{row["datum"]}'] = False
-                    submit_button = st.form_submit_button(label='Einträge :red[LÖSCHEN]')
-                    if submit_button:
-                            selected_dates = [date for date, checked in checked_boxes.items() if checked]
-                            for row in selected_dates:
-                                loeschen_eintraege(row,st.session_state['loggedinuserid'])
-                            else:
-                                st.rerun()
-                    #if alles:
-                    #   nichtgewählte = [key for key, checked in checked_boxes.items() if not checked]
-                    #  st.success(nichtgewählte)
-                    # for state in nichtgewählte:
-                        #    st.session_state[f'{state}'] = True
-                        #   st.write(st.session_state[f'{state}'])
-                        
+                        num_checks = len(df_month)
+                        num_cols = (num_checks // 25) + (num_checks % 25 > 0)
+                        cols = st.columns(num_cols)
+
+                        with st.form(key=f'loeschen{i}_{j}'):
+                            checked_boxes = {}
+                            for k, row in df_month.iterrows():
+                                with cols[k % num_cols]:
+                                    int_part = math.floor(row['quick'])
+                                    num_dig = len(str(int_part))
+                                    gerundeterquick = round(row['quick'],num_dig) 
+                                    checked_boxes[row['datum']] = st.checkbox(label=f":blue[Datum]: {row['datum']} - :orange[Quick]: {gerundeterquick}", key=f'value_from_{row["datum"]}')
+                                    if f'value_from_{row["datum"]}' not in st.session_state:
+                                        st.session_state[f'value_from_{row["datum"]}'] = False
+                            submit_button = st.form_submit_button(label='Einträge :red[LÖSCHEN]')
+                            if submit_button:
+                                selected_dates = [date for date, checked in checked_boxes.items() if checked]
+                                for row in selected_dates:
+                                    loeschen_eintraege(row,st.session_state['loggedinuserid'])
+                                else:
+                                    st.rerun()
+    else:
+        st.info('Sie haben noch keine Messdaten erfasst.')   
