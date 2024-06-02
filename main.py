@@ -1,10 +1,10 @@
+#benötigte Skripts importieren
 import streamlit as st
 from functions.database_new import *
 from functions.utilities import *
-from functions.user_functions import *
-from functions.quick_functions import *
 from functions.cnx import *
 
+#session_state Variablen initialisieren
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
@@ -22,10 +22,17 @@ if 'aktuell' not in st.session_state:
 else:
     st.session_state['aktuell'] = 'Startseite'
 
+#Hauptteil Main-Seite: main() holt Navigation aus utilities-Skript, DBs anlegen (eingeloggt/nicht eingeloggt), Container mit Infos anzeigen
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
     user_database()
     setup_quickdatabase(st.session_state['loggedinuserid'])
+    setup_devicedb(st.session_state['loggedinuserid'])
+    setup_devicedb2(st.session_state['loggedinuserid'])
+    setup_lotnrdb(st.session_state['loggedinuserid'])
+    setup_lotnrdb2(st.session_state['loggedinuserid'])
+    setup_meddb(st.session_state['loggedinuserid'])
+    setup_targetlevel(st.session_state['loggedinuserid'])
     with st.container(border=True):
         st.title('International Normalized Ratio')
         st.header('1. Definition')
