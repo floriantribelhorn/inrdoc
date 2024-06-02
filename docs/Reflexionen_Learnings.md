@@ -40,7 +40,7 @@
     - Ausloggen funktioniert einwandfrei
 
 # Reflexion über die App
- Die Gestaltung eines Apps erwies sich als sehr aufwendig, da immer wieder neue Probleme  auftauchen, welche gelöst werden müssen. Zudem gestaltete sich es als schwierg alle Ideen umzusetzen. So mussten einige davon auf Eis gelegt werden, da es zu zeitaufwendig gewesen wäre und auch über das Ziel geschossen worden wäre. Vor allem der Login und die Umrechnung erwies sich als aufwendig. Alles in allem funktioniert die App einwandfrei und erfüllt ihren Zweck. Mit mehr Zeit, wäre das ein oder andere Gadget noch einplanbar gewesen, in diesem Kontext hätte es allerdings dern Rahmen gesprengt. Auch mussten wir einsehen, dass nicht alles Geplante, einfach umsetzbar ist. Jedoch sind wir mit dem Ergebnis zufrieden. Wir konnten einiges über das Programmieren und der Gestaltung eine App mitnehmen und hoffentlich auch in Zukunft anwenden.
+ Die Gestaltung eines Apps erwies sich als sehr aufwendig, da immer wieder neue Probleme  auftauchen, welche gelöst werden müssen. Zudem gestaltete sich es als schwierg alle Ideen umzusetzen. So mussten einige davon auf Eis gelegt werden, da es zu zeitaufwendig gewesen wäre und auch über das Ziel geschossen worden wäre. Vor allem der Login und die Umrechnung erwies sich als aufwendig. Alles in allem funktioniert die App einwandfrei und erfüllt ihren Zweck. Mit mehr Zeit, wäre das ein oder andere Gadget noch einplanbar gewesen, in diesem Kontext hätte es allerdings den Rahmen gesprengt. Auch mussten wir einsehen, dass nicht alles Geplante, einfach umsetzbar ist. Jedoch sind wir mit dem Ergebnis zufrieden. Wir konnten einiges über das Programmieren und der Gestaltung eine App mitnehmen und hoffentlich auch in Zukunft anwenden.
 
 
 
