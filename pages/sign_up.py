@@ -1,3 +1,4 @@
+#benötigte Skripts/Libraries importieren
 import streamlit as st
 from functions.utilities import *
 from functions.user_functions import *
@@ -5,6 +6,7 @@ from functions.quick_functions import *
 from functions.cnx import *
 from datetime import datetime
 
+#session_states definieren, falls sign_up.py direkt aufgerufen wird
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
@@ -19,9 +21,11 @@ if 'medikament' not in st.session_state:
 
 st.session_state['aktuell'] = 'Meine Daten'
 
+#Navigation in utilities ausführen (main())
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
 
+#Verfügbare Medikamente aus DB 'drugs' in dict abspeichern
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
 cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
@@ -32,6 +36,7 @@ for name, nr in rows:
 conn.commit()
 conn.close()
 
+#falls nicht eingeloggt die passenden Buttons in sidebar anzeigen
 if st.session_state['loginstatus'] == False:
     if st.session_state['einloggen'] == False and st.session_state['registrieren'] == True:
         with st.sidebar.form(key='chooselog',border=True):
@@ -49,6 +54,7 @@ if st.session_state['loginstatus'] == False:
             if st.form_submit_button(label='Fortfahren zum Registrieren'):
                 proceed_register()
 
+#falls proceed-login-Button gedrückt wurde, Login-Form anzeigen, falls proceed-register-button gedrückt wurde Register-Form anzeigen
     if st.session_state['einloggen'] == True:
         with st.sidebar.form(key='login',clear_on_submit=True,border=True):
             st.subheader('Login')
@@ -69,5 +75,6 @@ if st.session_state['loginstatus'] == False:
             registerdate = datetime.today()
             st.form_submit_button(label='Registrieren',on_click=register(username,vorname,nachname,password,pass_repeat,geburtsdatum,registerdate,mednr))
 else:
+#falls jemand eingeloggt ist: Anzeigen der Profildaten 
     meine_userdaten(st.session_state['loggedinuserid'])
     inr_bereich(st.session_state['loggedinuserid'])

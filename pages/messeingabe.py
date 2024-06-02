@@ -1,44 +1,34 @@
+#benötigte Skripts/Libraries importieren
 import streamlit as st
 from functions.database_new import *
 from functions.utilities import *
-from functions.user_functions import *
 from functions.quick_functions import *
 from functions.cnx import *
 
+#session_state Variable initialisieren falls overview.py direkt aufgerufen wird
 if 'loginstatus' not in st.session_state:
     st.session_state['loginstatus'] = False
 
 if 'medikament' not in st.session_state:
     st.session_state['medikament'] = False
 
-if 'heutigerquicksec' not in st.session_state:
-    st.session_state['heutigerquicksec'] = 0
-
 st.session_state['aktuell'] = 'Dateneingabe'
 
+#Navigation anzeigen
 if __name__ == '__main__':
     main(st.session_state['loginstatus'])
-
-def callback_calcfromsec():
-    # Update the quickproz and inr variables based on the new value of quicksec
-    global heutigerquickproz, inr
-    heutigerquicksec = st.session_state['heutigerquicksec']
-    heutigerquickproz = (st.session_state['current_ref']/heutigerquicksec)*100
-    inr = (heutigerquicksec/st.session_state['current_ref'])**st.session_state['current_isi']
-    # Update the value of the quickproz and inr inputs
-    st.session_state.heutigerquickproz = heutigerquickproz
-    st.session_state.heutigerinr = inr
-
+#Callback Funktion für Berechnung quick in Prozent und errechneter Sekunden-Messwert (LOT-abhängig)
 def callback_calc2frominr():
-    # Update the quickproz and inr variables based on the new value of quicksec
+    #Variablen definieren + ausrechnen
     global heutigerquickproz, heutigerquicksec
     inr = st.session_state['heutigerinr']
     heutigerquicksec = st.session_state['current_ref']*(inr)**(1/st.session_state['current_isi'])
     heutigerquickproz = (st.session_state['current_ref']/heutigerquicksec)*100
-    # Update the value of the quickproz and inr inputs
+    #Text-Inputs mit Variablen abgleichen
     st.session_state.heutigerquickproz = heutigerquickproz
     st.session_state.heutigerquicksec = heutigerquicksec
 
+#wenn eingeloggt Funktionen und Inputs zum Daten erfassen anzeigen
 if st.session_state['loginstatus'] != False:
     if st.session_state['medikament'] == True:
         conn = mysql.connector.connect(**connex())
@@ -94,4 +84,5 @@ if st.session_state['loginstatus'] != False:
     else:
         st.text('Noch kein Medikament erfasst!')
 else:
+#wenn nicht eingeloggt zurück auf Hauptseite
     st.switch_page('main.py')

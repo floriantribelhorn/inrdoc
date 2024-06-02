@@ -5,6 +5,25 @@ from functions.quick_functions import *
 from functions.cnx import *
 import time
 
+#je einmal Abruf, welche Medikamente, Geräte zur Auswahl stehen und in 2 dicts abspeichern    
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
+rows = cursor.fetchall()
+drugs_dict = {}
+for name, nr in rows:
+    drugs_dict[name] = nr
+conn.close()
+
+conn = mysql.connector.connect(**connex())
+cursor = conn.cursor()
+cursor.execute('SELECT `device_name`,`device_nr` FROM `sql7710143`.`devices`')
+rows = cursor.fetchall()
+device_dict = {}
+for name, nr in rows:
+    device_dict[name] = nr
+conn.close()
+
 #Datenbank-Abfrage, ob eingeloggter user bereits ein Gerät erfasst hat (bei Neuregistration nie), Gerätenummer wird in Liste rows abgespeichert
 conn = mysql.connector.connect(**connex())
 cursor = conn.cursor()
