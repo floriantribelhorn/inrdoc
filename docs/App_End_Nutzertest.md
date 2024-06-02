@@ -2,7 +2,7 @@
 
 1. Registration des Users funktioniert
     - Registration des Medikaments (inkl. der Lotnummer)
-        -Lotnummer wichtig, da bei Lotnummerwechsel auch der tehrapeutische Bereich des INR wechseln kann
+        - Lotnummer wichtig, da bei Lotnummerwechsel auch der tehrapeutische Bereich des INR wechseln kann
     - Registration des Messgerätes
     - Eingabe des medizinisch relevanten INR-Bereiches kann auch eingegeben werden
 
