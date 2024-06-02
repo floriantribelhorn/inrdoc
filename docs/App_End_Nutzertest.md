@@ -32,5 +32,5 @@
 
 
 # Bewertung
-Testuser konnte sich ohne Probleme registrieren. Messwerte konnten ohne Probleme eingegeben werden und anschliessend im Bereich Überblick angeschaut werden. Der Quick Range wird ausgerechnet indem nur der INR (relevantere Wert) eingegeben werden muss. Die Werte können anschliessend als Grafik auch lokal gespeichert werden um somit ein Dokument für einen allfälligen Besuch bei Hausartz zu haben.
-Alles in allem sehr überischtlich App und einfach in der Handhabung.
+Testuser konnte sich ohne Probleme registrieren. Messwerte konnten ohne Probleme eingegeben werden und anschliessend im Bereich "Überblick" angeschaut werden. Der Quick Range wird ausgerechnet indem nur der INR (relevantere Wert) eingegeben werden muss. Die Werte können anschliessend als Grafik auch lokal gespeichert werden um somit ein Dokument für einen allfälligen Besuch bei Hausartz zu haben.
+Alles in allem sehr überischtliche App und einfach in der Handhabung, erfüllt seinen Zweck als "Quicktagebuch".
