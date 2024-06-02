@@ -1,5 +1,6 @@
 import streamlit as st
 
+#Datenbankverbindung mittels Streamlit secrets
 def connex():
     cnxn_str = {
         'user': st.secrets.db_credentials.user,

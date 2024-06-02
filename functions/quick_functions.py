@@ -1,3 +1,4 @@
+#benötigte Skripts/Libraries importieren
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,16 +7,17 @@ import mysql.connector
 import plotly.graph_objects as go
 import time
 from functions.cnx import *
-from functions.utilities import *
 import math
 from datetime import datetime
 
+#Funktion zum Ausgeben der gespeicherten Daten in Form von einer mit plotly generierter Grafik
 def quick_data_check(user, dauer):
     conn = mysql.connector.connect(**connex())
+    #Alle Daten von "user" aus mainDB auslesen und nach Datum ordnen (absteigend = neustes zuerst)
     sql_query = f"""
     SELECT * FROM `sql7710143`.`main_quick_data` WHERE user = {user} ORDER BY `datum` ASC
     """
-
+    #mit pandas dataframe zurechtrücken (zwei Spalten droppen), sortieren (datum, inr) und mit df.head auf ausgewählte Dauer stutzen
     df = pd.read_sql(sql_query, conn)
     df = df.drop(columns=['id','user'])
     df = df.sort_values('datum') 
@@ -23,6 +25,7 @@ def quick_data_check(user, dauer):
     df = df.sort_values(by=['datum', 'inr'],ascending=False)  
     df = df.head(dauer)    
 
+    #plotly graph Objekte aus dataframe definieren sowie aus Datenbank Namen des users und INR-Zielwerte abrufen
     fig = go.Figure(data=go.Scatter(x=df['datum'], y=df['inr'], mode='lines'))
     cursor = conn.cursor()
     cursor.execute('SELECT `vorname` FROM `sql7710143`.`user_data` WHERE id = %s', (user,))
@@ -34,15 +37,16 @@ def quick_data_check(user, dauer):
     cursor.execute(f'SELECT `lower`,`upper` FROM `sql7710143`.`targetlevel` WHERE `user` = %s', (user,))
     row = cursor.fetchone()
     conn.close()
-    
+    #Zielwerte in Variabeln abspeichern
     lower, upper = row
 
+    #plotly Graphen erstellen
     fig.update_layout(
         xaxis=dict(title='Datum', tickformat='%Y-%m-%d'),
         yaxis=dict(title='INR'),
         title=f'Quick Daten (INR-Zielbereich) von {rows[0][0]} letzte {dauer} Dateneinträge',
         shapes=[
-        # Add the first reference line
+        #Referenzlinie "lower"
         dict(
             type='line',
             x0=df['datum'].min(),
@@ -55,7 +59,7 @@ def quick_data_check(user, dauer):
                 dash='dash'
             )
         ),
-        # Add the second reference line
+        #Referenzlinie "upper"
         dict(
             type='line',
             x0=df['datum'].min(),
@@ -70,10 +74,10 @@ def quick_data_check(user, dauer):
         )
         ]
     )
-
     st.plotly_chart(fig, use_container_width=False, sharing="streamlit", theme="streamlit")
     conn.close()
 
+#Funktion zur Überprüfung, ob am gewählten Datum bereits ein Quick gespeichert wurde
 def quick_empty(user, date):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -86,7 +90,9 @@ def quick_empty(user, date):
     else:
         return False
 
+#Funktion zum Abspeichern eines eingetragenen INR-Werts
 def quick_eintrag(quick,inr,date):
+    #vorerst abrufen, welches Medikament der user verwendet und welches sein aktuelles LOT-Nr. ist
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
     id = st.session_state['loggedinuserid']
@@ -100,18 +106,19 @@ def quick_eintrag(quick,inr,date):
     rows2 = cursor.fetchone()
     current_lot = rows2[0]
     conn.close()
-
+    #nur weiter, wenn auch schon Medikament erfasst ist
     if rows != 0:
         med2 = rows[0]
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
+        #die verschiedenen Daten in Tabelle eintragen -> quick, inr und date kommen von der Editor-Seite, id,med2 und current lot wurden in der Funktion definiert
         cursor.execute(f"""
             INSERT INTO `sql7710143`.`main_quick_data` (quick, inr, datum, user, medi, lot_nr)
             VALUES (%s,%s,%s,%s,%s, %s)
             """, (quick,inr,date,id,med2,current_lot))
         conn.commit()
         conn.close()
-
+        #solange Daten an DB geschickt werden kurzer Progress-Balken
         progress_text = "Quick wird gespeichert, bitte warten bis Meldung in grün erscheint!"
         my_bar = st.progress(0, text=progress_text)
 
@@ -119,7 +126,7 @@ def quick_eintrag(quick,inr,date):
             time.sleep(0.01)
             my_bar.progress(percent_complete + 1, text=progress_text)
         my_bar.empty()
-
+        #nochmals DB-connection zum erfolgreichen Speichern überprüfen und st.success mit ausgelesenen neuen Daten
         conn = mysql.connector.connect(**connex())
         cursor = conn.cursor()
         cursor.execute(f"""
@@ -133,6 +140,7 @@ def quick_eintrag(quick,inr,date):
     else:
         st.info('Sie haben noch kein Medikament in Ihrem Profil erfasst!')
 
+#Funktion zum Anpassen der INR-Zielwerte im Profil-Bereich (sign_up.py)
 def inr_bereich(userid):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -163,6 +171,7 @@ def inr_bereich(userid):
             else:
                 st.info('Unterer INR-Zielwert ist grösser als der obere, keine Aktualisierung erfolgt!')
 
+#Funktion zum Löschen von ausgewählten Einträgen bei editor.py, resp. diese Funktion wird in folgender Fkt (quick_daten()) gebraucht
 def loeschen_eintraege(daten,user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -178,9 +187,11 @@ def loeschen_eintraege(daten,user):
     conn.commit()
     conn.close()
 
+#Funktion zum Auslesen aller bisher erfassten Daten eines users + Ordnung nach Jahr und Monaten incl. Lösch-Fkt (siehe vorgehende Fkt)
 def quick_daten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
+    #sql-query zum Zählen von Daten-Einträgen sortiert nach Jahr und Monat (beides aufsteigend)
     sqlquery = f"""
     SELECT YEAR(`datum`) AS Year, MONTH(`datum`) AS Month, COUNT(*) AS Count
     FROM `main_quick_data`
@@ -192,24 +203,25 @@ def quick_daten(user):
     rows = cursor.fetchall()
 
     if rows:
+        #obige Daten in dataframe speichern
         df = pd.read_sql(sqlquery, conn)
 
-        # Anzahl Tabs = Anzahl Jahre in DF
-        num_tabs = len(df['Year'].unique())
-
-        # Tabs erstellen
+        #Jahr-Tabs erstellen für jedes Jahr mit Daten
         tab_titles = [f'Jahr {year}' for year in df['Year'].unique()]
         tabs = st.tabs(tab_titles)
 
+        #jedes Jahr-Tab iterieren
         for i, year in enumerate(df['Year'].unique()):
             with tabs[i]:
-                # Subtabs für jeden Monat erstellen
+                #Subtabs für jeden Monat im dazupassenden Jahr-Tab erstellen
                 subtab_titles = [f'Monat {month}' for month in df[df['Year'] == year]['Month'].unique()]
                 subtabs = st.tabs(subtab_titles)
 
+                #jedes Monat-Tab iterieren, um die dazupassenden Quick-Daten als Checkbox auszugeben
                 for j, month in enumerate(df[df['Year'] == year]['Month'].unique()):
                     with subtabs[j]:
                         conn = mysql.connector.connect(**connex())
+                        #aus HauptDB passende Jahr/Monat Quick-Daten abrufen
                         sql_query = f"""
                         SELECT * FROM `main_quick_data` 
                         WHERE YEAR(datum) = {year} AND MONTH(datum) = {month} AND user = {user} 
@@ -221,8 +233,6 @@ def quick_daten(user):
                         df_month['quick'] = df_month['quick'].astype(float)  
                         df_month = df_month.sort_values(by=['datum', 'quick'],ascending=False) 
                         df_month['checkbox'] = df_month.index
-
-                        conn.commit()
                         conn.close()
 
                         num_checks = len(df_month)

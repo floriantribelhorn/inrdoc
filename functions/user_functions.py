@@ -1,3 +1,4 @@
+#benötigte Skripts/Libraries importieren
 import streamlit as st
 import mysql.connector
 from functions.utilities import *
@@ -5,30 +6,7 @@ from functions.cnx import *
 from datetime import datetime
 import time
 
-conn = mysql.connector.connect(**connex())
-cursor = conn.cursor()
-cursor.execute('SELECT `drug_name`,`drug_nr` FROM `sql7710143`.`drugs`')
-rows = cursor.fetchall()
-drugs_dict = {}
-for name, nr in rows:
-    drugs_dict[name] = nr
-conn.close()
-
-conn = mysql.connector.connect(**connex())
-cursor = conn.cursor()
-cursor.execute('SELECT `device_name`,`device_nr` FROM `sql7710143`.`devices`')
-rows = cursor.fetchall()
-device_dict = {}
-for name, nr in rows:
-    device_dict[name] = nr
-conn.close()
-
-def login(username,password):
-    if empty_check2(username,password):
-        user_einloggen(username,password)
-    else:
-        st.info('Füllen Sie beide Felder aus!')
-
+#Registrierungs-Funktion (verschachtelt) mit anlegen (folgende Fkt user_anlegen) des users in der userDB (inlc. emptycheck)
 def register(username,vorname,nachname,password,password_repeat,geburtsdatum,registerdate,med):
     if empty_check3(username,vorname,nachname,password,password_repeat,geburtsdatum,registerdate) == True:
         if password == password_repeat:
@@ -40,7 +18,21 @@ def register(username,vorname,nachname,password,password_repeat,geburtsdatum,reg
             st.warning('Passwörter stimmen nicht überein🔥')    
     else:
         st.info('Füllen sie alle Felder aus')
+    
+def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med):
+    passwordcheck = md5sum(password)
+    
+    conn = mysql.connector.connect(**connex())
+    cursor = conn.cursor()
 
+    cursor.execute("""
+        INSERT INTO `sql7710143`.`user_data` (username, password, vorname, nachname, register_date, birthdate, med)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (username, passwordcheck, vorname, nachname, registerdate, geburtsdatum,med))
+    conn.commit()
+    conn.close()
+
+#Fkt zum Überprüfen, ob ein username schon vergeben ist
 def username_check(username):
     if 'usernameavailable' not in st.session_state:
         st.session_state['usernameavailable'] = False
@@ -57,6 +49,7 @@ def username_check(username):
         st.session_state['usernameavailable'] = False
     conn.close()
 
+#Fkt zum Abrufen des momentan erfassten Messgeräts des jeweiligen users
 def dev_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -68,6 +61,7 @@ def dev_check(user):
     else:
         return rows[0]
 
+#Fkt zum Abrufen des momentan erfassten LOTs des jeweiligen users
 def lot_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -79,6 +73,7 @@ def lot_check(user):
     else:
         return rows[0]
 
+#Fkt zum Abrufen der momentan erfassten Zielwerte des jeweiligen users
 def level_check(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -90,19 +85,15 @@ def level_check(user):
     else:
         return rows[0]
 
-def user_anlegen(username,password,vorname,nachname,geburtsdatum,registerdate,med):
-    passwordcheck = md5sum(password)
-    
-    conn = mysql.connector.connect(**connex())
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO `sql7710143`.`user_data` (username, password, vorname, nachname, register_date, birthdate, med)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        """, (username, passwordcheck, vorname, nachname, registerdate, geburtsdatum,med))
-    conn.commit()
-    conn.close()
-    
+#verschachtelte Login Fkt, bei welcher pw und username mitgegeben werden, zuerst check, ob textinput leer war und danach user_einloggen
+def login(username,password):
+    if empty_check2(username,password):
+        user_einloggen(username,password)
+    else:
+        st.info('Füllen Sie beide Felder aus!')
+#login wird in vorgehender Fkt aufgerufen -> sobald ein user eingeloggt (richtiges pw und username) wird, 
+#werden die session_states angepasst und geschaut, ob der user Messgerät, LOT und Zielwerte schon erfasst hat,
+#falls nicht wird er auf pages/update.py Skript umgeleitet, um diese Angaben noch zu erfassen
 def user_einloggen(username, password):
     pw = md5sum(password)
     
@@ -137,16 +128,7 @@ def user_einloggen(username, password):
     conn.commit()
     conn.close()
 
-def user_data_check():
-    conn = mysql.connector.connect(**connex())
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM `sql7710143`.`user_data`')
-    rows = cursor.fetchall()
-
-    for row in rows:
-        st.table(row)
-    conn.close()
-
+#Fkt zum Ändern des usernames
 def update_username(id, username):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -164,6 +146,7 @@ def update_username(id, username):
     conn.commit()
     conn.close()
 
+#Fkt zum Ändern der eingetragenen Vor- und Nachnamen
 def name_update(id,vorname,nachname):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -191,6 +174,7 @@ def name_update(id,vorname,nachname):
     conn.close()
     st.session_state['loggedinuser'] = vorname
 
+#Fkt zum Ändern des Geburtsdatums
 def birthdate_update(id,bd):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -210,6 +194,7 @@ def birthdate_update(id,bd):
     conn.commit()
     conn.close()
 
+#Fkt zum Ändern des verwendeten Medikaments
 def med_updater(user,medi):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
@@ -240,6 +225,7 @@ def med_updater(user,medi):
     conn.commit()
     conn.close()
 
+#Fkt zum Aktualisieren des verwendeten LOTs von der update.py Seite abgerufen
 def lot_update1(lot):
     user = st.session_state['loggedinuserid']
     date = datetime.today().date()
@@ -263,6 +249,7 @@ def lot_update1(lot):
     conn.commit()
     conn.close()
 
+#Fkt zum Aktualisieren des verwendeten LOTs aus der Funktion meine_userdaten() abgerufen
 def lot_update2(lot):
     user = st.session_state['loggedinuserid']
     date = datetime.today().date()
@@ -292,6 +279,7 @@ def lot_update2(lot):
     conn.commit()
     conn.close()
 
+#Fkt zum Anpassen der Zielwerte
 def level_update(upper,lower):
     user = st.session_state['loggedinuserid']
     if upper > lower:
@@ -328,6 +316,7 @@ def level_update(upper,lower):
         time.sleep(2)
         st.switch_page('main.py')
 
+#Fkt zum Aktualisieren des verwendeten Messgeräts
 def device_update2(device):
     user = st.session_state['loggedinuserid']
     conn = mysql.connector.connect(**connex())
@@ -363,7 +352,8 @@ def device_update2(device):
         st.warning('Hat nicht geklappt!')
         conn.close()
     
-
+#Fkt zum Abrufen aller aktuellen Profil-Daten und mit nachgeschalteter Möglichkeit alles zu aktualisieren
+#(alle vorangehenden Funktionen in diesem Skript), Passwort-Aktualisieren geht nicht
 def meine_userdaten(user):
     conn = mysql.connector.connect(**connex())
     cursor = conn.cursor()
